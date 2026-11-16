@@ -1,0 +1,387 @@
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+
+// _worker.js
+var enc = new TextEncoder();
+var b64 = /* @__PURE__ */ __name((x) => btoa(String.fromCharCode(...new Uint8Array(x))), "b64");
+var json = /* @__PURE__ */ __name((x, status = 200, extra = {}) => new Response(JSON.stringify(x), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...extra } }), "json");
+var BETA_STAGE_KEY = "stage-1";
+var AGREEMENT_VERSION = "1.0";
+var PRIVACY_VERSION = "1.0";
+var IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+var VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+var MAX_EVIDENCE_PER_QUESTION = 3;
+var ALLOWED_EVIDENCE_TYPES = /* @__PURE__ */ new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/quicktime", "video/webm"]);
+async function assetText(env, request, path) {
+  const r = await env.ASSETS.fetch(new Request(new URL(path, request.url)));
+  return r.ok ? await r.text() : "";
+}
+__name(assetText, "assetText");
+async function hash(password, salt) {
+  const k = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
+  return b64(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: enc.encode(salt), iterations: 1e5, hash: "SHA-256" }, k, 256));
+}
+__name(hash, "hash");
+async function sha(x) {
+  return b64(await crypto.subtle.digest("SHA-256", enc.encode(x)));
+}
+__name(sha, "sha");
+async function session(request, env) {
+  const m = (request.headers.get("Cookie") || "").match(/(?:^|; )pg_beta_session=([^;]+)/);
+  if (!m) return null;
+  return env.DB.prepare("SELECT s.*,u.username,u.display_name,u.role FROM beta_sessions s JOIN beta_users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>datetime('now') AND u.active=1").bind(await sha(m[1])).first();
+}
+__name(session, "session");
+async function taskForUser(env, userId, taskKey) {
+  return env.DB.prepare("SELECT id,pack_key,task_key FROM beta_tasks WHERE task_key=? AND (pack_key IN ('common','explore') OR EXISTS(SELECT 1 FROM beta_assignments a WHERE a.user_id=? AND a.pack_key=beta_tasks.pack_key))").bind(taskKey, userId).first();
+}
+__name(taskForUser, "taskForUser");
+async function evidenceForUser(env, userId) {
+  const rows = await env.DB.prepare("SELECT e.id,e.task_id,t.task_key,e.section_key,e.question_key,e.original_name,e.content_type,e.size_bytes,e.created_at FROM beta_evidence e JOIN beta_tasks t ON t.id=e.task_id WHERE e.user_id=? ORDER BY e.id").bind(userId).all();
+  return rows.results || [];
+}
+__name(evidenceForUser, "evidenceForUser");
+function groupEvidence(rows) {
+  return rows.reduce((map, row) => {
+    (map[row.task_key] ??= []).push(row);
+    return map;
+  }, {});
+}
+__name(groupEvidence, "groupEvidence");
+function safeFileName(value) {
+  return String(value || "evidence").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120) || "evidence";
+}
+__name(safeFileName, "safeFileName");
+async function api(request, env, path) {
+  if (path === "/api/beta/login" && request.method === "POST") {
+    const b = await request.json().catch(() => ({})), u = String(b.username || "").trim().toLowerCase(), p = String(b.password || "");
+    const user = await env.DB.prepare("SELECT * FROM beta_users WHERE username=? AND active=1").bind(u).first();
+    if (!user || await hash(p, user.password_salt) !== user.password_hash) return json({ error: "Invalid login details." }, 401);
+    const token = b64(crypto.getRandomValues(new Uint8Array(32))), exp = new Date(Date.now() + 12096e5).toISOString();
+    await env.DB.prepare("INSERT INTO beta_sessions(user_id,token_hash,expires_at,last_seen_at) VALUES(?,?,?,datetime('now'))").bind(user.id, await sha(token), exp).run();
+    return json({ user: { username: user.username, displayName: user.display_name, role: user.role } }, 200, { "Set-Cookie": `pg_beta_session=${token}; Path=/; Max-Age=1209600; HttpOnly; Secure; SameSite=Lax` });
+  }
+  if (path === "/api/beta/incidents" && request.method === "POST") {
+    const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, X-PG-Beta-Report-Key" };
+    if (!env.BETA_REPORT_KEY || request.headers.get("X-PG-Beta-Report-Key") !== env.BETA_REPORT_KEY) return json({ error: "Incident reporting is not enabled for this build." }, 403, { ...cors });
+    const form = await request.formData().catch(() => null);
+    if (!form) return json({ error: "Invalid incident report." }, 400, { ...cors });
+    const incidentNumber = String(form.get("incidentNumber") || "").trim(), log = form.get("log");
+    if (!incidentNumber) return json({ error: "Incident number is required." }, 400, { ...cors });
+    if (!(log instanceof File) || log.size < 1 || log.size > 10 * 1024 * 1024) return json({ error: "A log file up to 10 MB is required." }, 400, { ...cors });
+    const metadata = String(form.get("metadata") || new URL(request.url).searchParams.get("metadata") || "");
+    if (metadata.length > 2e4) return json({ error: "Incident metadata is too large." }, 400, { ...cors });
+    const reportId = crypto.randomUUID(), safeName = log.name.replace(/[^a-zA-Z0-9._-]/g, "_"), objectKey = `beta-incidents/${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}/${reportId}/${safeName}`;
+    try {
+      await env.EVIDENCE.put(objectKey, log.stream(), { httpMetadata: { contentType: log.type || "text/plain" }, customMetadata: { incidentNumber } });
+      const result = await env.DB.prepare("INSERT INTO beta_incident_reports (incident_number,description,app_metadata,log_object_key,log_original_name,log_content_type,log_size_bytes) VALUES (?,?,?,?,?,?,?)").bind(incidentNumber, "", metadata || null, objectKey, log.name, log.type || "application/octet-stream", log.size).run();
+      return json({ ok: true, reportId: String(result.meta?.last_row_id || reportId) }, 201, { ...cors });
+    } catch (error) {
+      await env.EVIDENCE.delete(objectKey).catch(() => {
+      });
+      return json({ error: "Incident report could not be saved." }, 500, { ...cors });
+    }
+  }
+  const s = await session(request, env);
+  if (!s) return json({ error: "Sign in required." }, 401);
+  if (path === "/api/beta/me") return json({ user: { username: s.username, displayName: s.display_name, role: s.role } });
+  if (path === "/api/beta/agreement" && request.method === "GET") {
+    const agreement = await env.DB.prepare("SELECT * FROM beta_agreement_records WHERE user_id=? AND stage_key=? ORDER BY id DESC LIMIT 1").bind(s.user_id, BETA_STAGE_KEY).first();
+    return json({ stageKey: BETA_STAGE_KEY, agreement: agreement || null });
+  }
+  if (path === "/api/beta/agreement" && request.method === "POST") {
+    if (s.role !== "tester") return json({ error: "Tester agreement required for tester accounts." }, 403);
+    const b = await request.json().catch(() => ({})), decision = b.decision, reason = String(b.declineReason || "").trim();
+    if (!["agreed", "declined"].includes(decision)) return json({ error: "Invalid agreement decision." }, 400);
+    if (decision === "declined" && reason.length < 5) return json({ error: "Please provide a reason for declining." }, 400);
+    if (!b.fullName || !b.email) return json({ error: "Full name and email address are required." }, 400);
+    if (decision === "agreed" && (!b.fullName || !b.email || !b.availability || !b.m3Details || !b.ipadDetails || !b.peripheralDetails || !b.adultConfirmed || !b.riskConfirmed || !b.privacyConfirmed || !b.agreementConfirmed)) return json({ error: "All required identity, setup, and confirmation fields must be completed." }, 400);
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const agreementText = await assetText(env, request, "/beta/agreement.md"), privacyText = await assetText(env, request, "/beta/privacy-notice.md");
+    await env.DB.prepare("INSERT OR IGNORE INTO beta_agreement_versions(version_number,agreement_text,privacy_version,privacy_text,effective_date) VALUES(?,?,?,?,?)").bind(AGREEMENT_VERSION, agreementText, PRIVACY_VERSION, privacyText, "2026-09-01").run();
+    const stageRows = await env.DB.prepare("SELECT task_key,title,instructions,required FROM beta_tasks WHERE pack_key IN ('common','explore') OR EXISTS(SELECT 1 FROM beta_assignments a WHERE a.user_id=? AND a.pack_key=beta_tasks.pack_key) ORDER BY sort_order,id").bind(s.user_id).all();
+    const appData = JSON.stringify({ availability: b.availability, m3Details: b.m3Details, ipadDetails: b.ipadDetails, peripheralDetails: b.peripheralDetails });
+    await env.DB.prepare("INSERT INTO beta_agreement_records(user_id,stage_key,agreement_version,privacy_version,agreement_text,privacy_text,full_name,email,public_name,adult_confirmed,risk_confirmed,credit_opt_out,application_data,stage_requirements,decision,decline_reason,submitted_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(s.user_id, BETA_STAGE_KEY, AGREEMENT_VERSION, PRIVACY_VERSION, agreementText, privacyText, String(b.fullName || ""), String(b.email || ""), String(b.publicName || "") || null, b.adultConfirmed ? 1 : 0, b.riskConfirmed ? 1 : 0, b.creditOptOut ? 1 : 0, appData, JSON.stringify(stageRows.results || []), decision, decision === "declined" ? reason : null, now).run();
+    return json({ ok: true, stageKey: BETA_STAGE_KEY, decision, declineReason: decision === "declined" ? reason : null, agreedAt: now, agreementVersion: AGREEMENT_VERSION, privacyVersion: PRIVACY_VERSION });
+  }
+  if (path === "/api/beta/logout") {
+    await env.DB.prepare("DELETE FROM beta_sessions WHERE token_hash=?").bind(await sha((request.headers.get("Cookie") || "").match(/pg_beta_session=([^;]+)/)[1])).run();
+    return json({ ok: true }, 200, { "Set-Cookie": "pg_beta_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax" });
+  }
+  if (path === "/api/beta/tasks") {
+    const [rows, evidence] = await Promise.all([env.DB.prepare("SELECT t.pack_key,t.task_key,t.title,t.instructions,t.required,COALESCE(r.status,'not_started') status,r.ui_element_code,r.severity,r.reproduction_steps,r.expected_result,r.actual_result,r.notes,r.saved_at,r.submitted_at FROM beta_tasks t LEFT JOIN beta_responses r ON r.task_id=t.id AND r.user_id=? WHERE t.pack_key IN ('common','explore') OR EXISTS(SELECT 1 FROM beta_assignments a WHERE a.user_id=? AND a.pack_key=t.pack_key) ORDER BY t.sort_order,t.id").bind(s.user_id, s.user_id).all(), evidenceForUser(env, s.user_id)]), byTask = groupEvidence(evidence);
+    return json({ tasks: rows.results.map((task) => ({ ...task, evidence: byTask[task.task_key] || [] })) });
+  }
+  if (path === "/api/beta/evidence" && request.method === "POST") {
+    if (s.role !== "tester") return json({ error: "Only tester accounts can upload evidence." }, 403);
+    if (!env.EVIDENCE) return json({ error: "Evidence storage is not configured." }, 503);
+    const form = await request.formData().catch(() => null), taskKey = String(form?.get("taskKey") || "").trim(), questionKey = String(form?.get("questionKey") || taskKey).trim().slice(0, 100), sectionKey = String(form?.get("sectionKey") || "").trim().slice(0, 100), file = form?.get("file");
+    if (!taskKey || !questionKey || !(file instanceof File)) return json({ error: "Choose an image or video file first." }, 400);
+    const task = await taskForUser(env, s.user_id, taskKey);
+    if (!task) return json({ error: "That question is not assigned to this tester." }, 403);
+    const type = String(file.type || "").toLowerCase(), size = Number(file.size || 0), limit = type.startsWith("image/") ? IMAGE_MAX_BYTES : type.startsWith("video/") ? VIDEO_MAX_BYTES : 0;
+    if (!ALLOWED_EVIDENCE_TYPES.has(type)) return json({ error: "Only JPG, PNG, WebP, GIF, MP4, MOV, and WebM files are supported." }, 415);
+    if (size <= 0 || size > limit) return json({ error: `This ${type.startsWith("video/") ? "video" : "image"} exceeds the ${Math.round(limit / 1024 / 1024)} MB limit.` }, 413);
+    const existing = await env.DB.prepare("SELECT COUNT(*) AS count FROM beta_evidence WHERE user_id=? AND task_id=? AND question_key=?").bind(s.user_id, task.id, questionKey).first();
+    if (Number(existing?.count || 0) >= MAX_EVIDENCE_PER_QUESTION) return json({ error: `A maximum of ${MAX_EVIDENCE_PER_QUESTION} files can be attached to one question.` }, 400);
+    const originalName = safeFileName(file.name), objectKey = `evidence/${s.user_id}/${task.id}/${crypto.randomUUID()}-${originalName}`;
+    await env.EVIDENCE.put(objectKey, file.stream(), { httpMetadata: { contentType: type, contentDisposition: `inline; filename="${originalName}"` }, customMetadata: { userId: String(s.user_id), taskKey, sectionKey, questionKey } });
+    try {
+      await env.DB.prepare("INSERT INTO beta_evidence(user_id,task_id,section_key,question_key,object_key,original_name,content_type,size_bytes) VALUES(?,?,?,?,?,?,?,?)").bind(s.user_id, task.id, sectionKey || task.pack_key, questionKey, objectKey, originalName, type, size).run();
+    } catch (error) {
+      await env.EVIDENCE.delete(objectKey);
+      throw error;
+    }
+    const saved = await env.DB.prepare("SELECT id,task_id,section_key,question_key,original_name,content_type,size_bytes,created_at FROM beta_evidence WHERE object_key=?").bind(objectKey).first();
+    return json({ ok: true, evidence: saved });
+  }
+  if (path.startsWith("/api/beta/admin-evidence/") && request.method === "GET") {
+    if (s.role !== "admin") return json({ error: "Admin access required." }, 403);
+    if (!env.EVIDENCE) return json({ error: "Evidence storage is not configured." }, 503);
+    const id = Number(path.slice("/api/beta/admin-evidence/".length));
+    if (!Number.isInteger(id) || id < 1) return json({ error: "Invalid evidence id." }, 400);
+    const record = await env.DB.prepare("SELECT object_key,original_name,content_type,size_bytes FROM beta_evidence WHERE id=?").bind(id).first();
+    if (!record) return new Response("Evidence not found", { status: 404 });
+    const object = await env.EVIDENCE.get(record.object_key);
+    if (!object) return new Response("Evidence file not found", { status: 404 });
+    const headers = new Headers({ "Content-Type": record.content_type, "Content-Length": String(record.size_bytes), "Content-Disposition": `inline; filename="${safeFileName(record.original_name)}"`, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" });
+    return new Response(object.body, { headers });
+  }
+  if (path.startsWith("/api/beta/admin-incidents/") && request.method === "DELETE") {
+    if (s.role !== "admin") return json({ error: "Admin access required." }, 403);
+    const id = Number(path.slice("/api/beta/admin-incidents/".length));
+    if (!Number.isInteger(id) || id < 1) return json({ error: "Invalid incident id." }, 400);
+    const row = await env.DB.prepare("SELECT log_object_key FROM beta_incident_reports WHERE id=?").bind(id).first();
+    if (!row) return json({ error: "Incident report not found." }, 404);
+    if (!env.EVIDENCE) return json({ error: "Evidence storage is not configured." }, 503);
+    await env.EVIDENCE.delete(row.log_object_key);
+    await env.DB.prepare("DELETE FROM beta_incident_reports WHERE id=?").bind(id).run();
+    return json({ ok: true, deletedId: id });
+  }
+  if (path === "/api/beta/admin-incidents" && request.method === "GET") {
+    if (s.role !== "admin") return json({ error: "Admin access required." }, 403);
+    const u = new URL(request.url), n = u.searchParams.get("incidentNumber")?.trim() || "", limit = Math.min(Math.max(Number(u.searchParams.get("limit") || 100), 1), 200), q = n ? "SELECT id,incident_number,app_metadata,log_original_name,log_content_type,log_size_bytes,created_at FROM beta_incident_reports WHERE incident_number=? ORDER BY created_at DESC LIMIT ?" : "SELECT id,incident_number,app_metadata,log_original_name,log_content_type,log_size_bytes,created_at FROM beta_incident_reports ORDER BY created_at DESC LIMIT ?", rows = n ? await env.DB.prepare(q).bind(n, limit).all() : await env.DB.prepare(q).bind(limit).all();
+    return json({ reports: rows.results });
+  }
+  if (path.startsWith("/api/beta/admin-incident-log/") && request.method === "GET") {
+    if (s.role !== "admin") return json({ error: "Admin access required." }, 403);
+    if (!env.EVIDENCE) return json({ error: "Evidence storage is not configured." }, 503);
+    const id = Number(path.slice("/api/beta/admin-incident-log/".length));
+    if (!Number.isInteger(id) || id < 1) return json({ error: "Invalid incident id." }, 400);
+    const row = await env.DB.prepare("SELECT log_object_key,log_original_name,log_content_type FROM beta_incident_reports WHERE id=?").bind(id).first();
+    if (!row) return new Response("Incident report not found", { status: 404 });
+    const object = await env.EVIDENCE.get(row.log_object_key);
+    if (!object) return new Response("Evidence file not found", { status: 404 });
+    return new Response(object.body, { headers: { "Content-Type": row.log_content_type, "Content-Disposition": `attachment; filename="${safeFileName(row.log_original_name)}"`, "Cache-Control": "private, no-store" } });
+  }
+  if (path === "/api/beta/response" && request.method === "POST") {
+    const b = await request.json().catch(() => ({})), t = await env.DB.prepare("SELECT id FROM beta_tasks WHERE task_key=?").bind(b.taskKey).first();
+    if (!t) return json({ error: "Unknown task." }, 404);
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    await env.DB.prepare("INSERT INTO beta_responses(user_id,task_id,status,ui_element_code,severity,reproduction_steps,expected_result,actual_result,notes,saved_at,submitted_at) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,task_id) DO UPDATE SET status=excluded.status,ui_element_code=excluded.ui_element_code,severity=excluded.severity,reproduction_steps=excluded.reproduction_steps,expected_result=excluded.expected_result,actual_result=excluded.actual_result,notes=excluded.notes,saved_at=excluded.saved_at,submitted_at=excluded.submitted_at").bind(s.user_id, t.id, b.status || "saved", b.uiElementCode || null, b.severity || null, b.reproductionSteps || null, b.expectedResult || null, b.actualResult || null, b.notes || null, now, b.status === "submitted" ? now : null).run();
+    return json({ ok: true, savedAt: now });
+  }
+  if (path === "/api/beta/heartbeat" && request.method === "POST") {
+    const b = await request.json().catch(() => ({})), now = (/* @__PURE__ */ new Date()).toISOString(), last = b.lastActivityAt ? new Date(b.lastActivityAt) : new Date(Date.now() - 6e4), elapsed = Math.max(0, Math.min(300, Math.round((Date.now() - last.getTime()) / 1e3)));
+    await env.DB.prepare("INSERT INTO beta_sessions_time(user_id,started_at,last_activity_at,active_seconds,inactive_seconds) VALUES(?,?,?,?,?)").bind(s.user_id, b.sessionStartedAt || now, now, b.active === false ? 0 : elapsed, b.active === false ? elapsed : 0).run();
+    return json({ ok: true });
+  }
+  if (path === "/api/beta/admin-overview") {
+    if (s.role !== "admin") return json({ error: "Admin access required." }, 403);
+    const us = await env.DB.prepare("SELECT id,username,display_name FROM beta_users WHERE role='tester' AND active=1 ORDER BY display_name").all(), out = await Promise.all(us.results.map(async (u) => {
+      const [q, tm, agreement, evidence] = await Promise.all([env.DB.prepare("SELECT t.pack_key,t.task_key,t.title,t.required,COALESCE(r.status,'not_started') status,r.severity,r.notes,r.saved_at,r.submitted_at FROM beta_tasks t LEFT JOIN beta_responses r ON r.task_id=t.id AND r.user_id=? WHERE t.pack_key IN ('common','explore') OR EXISTS(SELECT 1 FROM beta_assignments a WHERE a.user_id=? AND a.pack_key=t.pack_key) ORDER BY t.sort_order,t.id").bind(u.id, u.id).all(), env.DB.prepare("SELECT COALESCE(SUM(active_seconds),0) active_seconds,COALESCE(SUM(inactive_seconds),0) inactive_seconds,MAX(last_activity_at) last_activity_at FROM beta_sessions_time WHERE user_id=?").bind(u.id).first(), env.DB.prepare("SELECT id,stage_key,agreement_version,privacy_version,full_name,email,public_name,adult_confirmed,risk_confirmed,credit_opt_out,decision,decline_reason,submitted_at agreed_at,withdrawal_status,completion_status,promo_available_at FROM beta_agreement_records WHERE user_id=? AND stage_key=? ORDER BY id DESC LIMIT 1").bind(u.id, BETA_STAGE_KEY).first(), evidenceForUser(env, u.id)]), byTask = groupEvidence(evidence);
+      return { ...u, tasks: q.results.map((task) => ({ ...task, evidence: byTask[task.task_key] || [] })), agreement: agreement || null, active_seconds: tm?.active_seconds || 0, inactive_seconds: tm?.inactive_seconds || 0, last_activity_at: tm?.last_activity_at || null };
+    }));
+    return json({ stageKey: BETA_STAGE_KEY, testers: out });
+  }
+  return json({ error: "Not found." }, 404);
+}
+__name(api, "api");
+var worker_default = { async fetch(request, env) {
+  const url = new URL(request.url);
+  if (url.pathname.startsWith("/api/beta/")) return api(request, env, url.pathname);
+  return env.ASSETS.fetch(request);
+} };
+
+// ../../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
+var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
+  try {
+    return await middlewareCtx.next(request, env);
+  } finally {
+    try {
+      if (request.body !== null && !request.bodyUsed) {
+        const reader = request.body.getReader();
+        while (!(await reader.read()).done) {
+        }
+      }
+    } catch (e) {
+      console.error("Failed to drain the unused request body.", e);
+    }
+  }
+}, "drainBody");
+var middleware_ensure_req_body_drained_default = drainBody;
+
+// ../../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/middleware-miniflare3-json-error.ts
+function reduceError(e) {
+  return {
+    name: e?.name,
+    message: e?.message ?? String(e),
+    stack: e?.stack,
+    cause: e?.cause === void 0 ? void 0 : reduceError(e.cause)
+  };
+}
+__name(reduceError, "reduceError");
+var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
+  try {
+    return await middlewareCtx.next(request, env);
+  } catch (e) {
+    const error = reduceError(e);
+    const body = JSON.stringify(error);
+    const headers = {
+      "Content-Type": "application/json",
+      "MF-Experimental-Error-Stack": "true"
+    };
+    const encoded = encodeURIComponent(body);
+    if (encoded.length <= 8192) {
+      headers["MF-Experimental-Error-Stack-Payload"] = encoded;
+    }
+    return new Response(body, { status: 500, headers });
+  }
+}, "jsonError");
+var middleware_miniflare3_json_error_default = jsonError;
+
+// .wrangler/tmp/bundle-vYdjRp/middleware-insertion-facade.js
+var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
+  middleware_ensure_req_body_drained_default,
+  middleware_miniflare3_json_error_default
+];
+var middleware_insertion_facade_default = worker_default;
+
+// ../../.npm/_npx/32026684e21afda6/node_modules/wrangler/templates/middleware/common.ts
+var __facade_middleware__ = [];
+function __facade_register__(...args) {
+  __facade_middleware__.push(...args.flat());
+}
+__name(__facade_register__, "__facade_register__");
+function __facade_invokeChain__(request, env, ctx, dispatch, middlewareChain) {
+  const [head, ...tail] = middlewareChain;
+  const middlewareCtx = {
+    dispatch,
+    next(newRequest, newEnv) {
+      return __facade_invokeChain__(newRequest, newEnv, ctx, dispatch, tail);
+    }
+  };
+  return head(request, env, ctx, middlewareCtx);
+}
+__name(__facade_invokeChain__, "__facade_invokeChain__");
+function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
+  return __facade_invokeChain__(request, env, ctx, dispatch, [
+    ...__facade_middleware__,
+    finalMiddleware
+  ]);
+}
+__name(__facade_invoke__, "__facade_invoke__");
+
+// .wrangler/tmp/bundle-vYdjRp/middleware-loader.entry.ts
+var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
+  constructor(scheduledTime, cron, noRetry) {
+    this.scheduledTime = scheduledTime;
+    this.cron = cron;
+    this.#noRetry = noRetry;
+  }
+  scheduledTime;
+  cron;
+  static {
+    __name(this, "__Facade_ScheduledController__");
+  }
+  #noRetry;
+  noRetry() {
+    if (!(this instanceof ___Facade_ScheduledController__)) {
+      throw new TypeError("Illegal invocation");
+    }
+    this.#noRetry();
+  }
+};
+function wrapExportedHandler(worker) {
+  if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
+    return worker;
+  }
+  for (const middleware of __INTERNAL_WRANGLER_MIDDLEWARE__) {
+    __facade_register__(middleware);
+  }
+  const fetchDispatcher = /* @__PURE__ */ __name(function(request, env, ctx) {
+    if (worker.fetch === void 0) {
+      throw new Error("Handler does not export a fetch() function.");
+    }
+    return worker.fetch(request, env, ctx);
+  }, "fetchDispatcher");
+  return {
+    ...worker,
+    fetch(request, env, ctx) {
+      const dispatcher = /* @__PURE__ */ __name(function(type, init) {
+        if (type === "scheduled" && worker.scheduled !== void 0) {
+          const controller = new __Facade_ScheduledController__(
+            Date.now(),
+            init.cron ?? "",
+            () => {
+            }
+          );
+          return worker.scheduled(controller, env, ctx);
+        }
+      }, "dispatcher");
+      return __facade_invoke__(request, env, ctx, dispatcher, fetchDispatcher);
+    }
+  };
+}
+__name(wrapExportedHandler, "wrapExportedHandler");
+function wrapWorkerEntrypoint(klass) {
+  if (__INTERNAL_WRANGLER_MIDDLEWARE__ === void 0 || __INTERNAL_WRANGLER_MIDDLEWARE__.length === 0) {
+    return klass;
+  }
+  for (const middleware of __INTERNAL_WRANGLER_MIDDLEWARE__) {
+    __facade_register__(middleware);
+  }
+  return class extends klass {
+    #fetchDispatcher = /* @__PURE__ */ __name((request, env, ctx) => {
+      this.env = env;
+      this.ctx = ctx;
+      if (super.fetch === void 0) {
+        throw new Error("Entrypoint class does not define a fetch() function.");
+      }
+      return super.fetch(request);
+    }, "#fetchDispatcher");
+    #dispatcher = /* @__PURE__ */ __name((type, init) => {
+      if (type === "scheduled" && super.scheduled !== void 0) {
+        const controller = new __Facade_ScheduledController__(
+          Date.now(),
+          init.cron ?? "",
+          () => {
+          }
+        );
+        return super.scheduled(controller);
+      }
+    }, "#dispatcher");
+    fetch(request) {
+      return __facade_invoke__(
+        request,
+        this.env,
+        this.ctx,
+        this.#dispatcher,
+        this.#fetchDispatcher
+      );
+    }
+  };
+}
+__name(wrapWorkerEntrypoint, "wrapWorkerEntrypoint");
+var WRAPPED_ENTRY;
+if (typeof middleware_insertion_facade_default === "object") {
+  WRAPPED_ENTRY = wrapExportedHandler(middleware_insertion_facade_default);
+} else if (typeof middleware_insertion_facade_default === "function") {
+  WRAPPED_ENTRY = wrapWorkerEntrypoint(middleware_insertion_facade_default);
+}
+var middleware_loader_entry_default = WRAPPED_ENTRY;
+export {
+  __INTERNAL_WRANGLER_MIDDLEWARE__,
+  middleware_loader_entry_default as default
+};
+//# sourceMappingURL=_worker.js.map

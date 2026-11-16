@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PG Beta | Virtual Controllers</title>
+  <link rel="stylesheet" href="beta.css"><link rel="stylesheet" href="stage.css">
+</head>
+<body>
+  <main class="shell" id="app">
+    <section class="login-card" id="loginView">
+      <div class="eyebrow">VIRTUAL CONTROLLERS / PRIVATE BETA</div>
+      <h1>PatchGrid Beta</h1>
+      <p class="muted">Sign in to complete your assigned testing plan and report issues with consistent UI labels.</p>
+      <form id="loginForm" class="stack">
+        <label>Username<input id="username" autocomplete="username" required></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+        <button class="primary" type="submit">Sign in</button>
+      </form>
+    </section>
+
+    <section class="agreement-card" id="agreementView" hidden>
+      <div class="eyebrow">PATCHGRID / BETA TESTER AGREEMENT</div>
+      <h1>Beta testing agreement</h1>
+      <p class="muted">Stage 1 · 1 September 2026 – 30 September 2026 · Agreement v1.0 · Privacy Notice v1.0</p>
+      <article class="agreement-copy" id="agreementDocument"><p>Loading the complete agreement…</p></article>
+      <div class="risk-notice"><strong>Hardware and Data Risk</strong><p>Beta software may cause loss, corruption, or unavailability of data and may affect connected equipment, including your Korg M3, iPad, cables, interfaces, MIDI equipment, and peripherals. Make suitable backups before testing.</p><label class="agreement-check"><input id="riskConsent" type="checkbox"> <span>I have read and understood this notice, made appropriate backups, and accept these risks.</span></label></div>
+      <div class="identity-grid"><label>Full legal name<input id="fullName" required autocomplete="name"></label><label>Email address<input id="email" type="email" required autocomplete="email"></label><label>Public/chosen display name (optional)<input id="publicName" placeholder="Leave blank to remain uncredited"></label><label>Testing availability<input id="availability" placeholder="e.g. 6 hours per week" required></label><label>Korg M3 model/configuration<input id="m3Details" required></label><label>iPad and operating system<input id="ipadDetails" required></label><label>Peripherals and MIDI setup<input id="peripheralDetails" required></label></div>
+      <label class="agreement-check"><input id="adultConsent" type="checkbox"> <span>I confirm that I am 18 years of age or older.</span></label>
+      <label class="agreement-check"><input id="privacyConsent" type="checkbox"> <span>I have read the <a href="privacy-notice.md" target="_blank" rel="noopener">separate Beta Programme Privacy Notice</a> (version 1.0).</span></label>
+      <label class="agreement-check"><input id="creditOptOut" type="checkbox"> <span>I do not want my public/chosen display name used in PatchGrid – M3 credits or SLP beta publications.</span></label>
+      <label class="agreement-check"><input id="agreementConsent" type="checkbox"> <span>I agree and understand that I must comply with the complete Beta Tester Agreement to participate in and benefit from the PatchGrid beta program.</span></label>
+      <div class="agreement-actions"><button class="primary" id="agreeButton" type="button" disabled>I agree and understand</button><button class="ghost" id="declineButton" type="button">Decline</button></div>
+      <div id="declineBox" hidden><label>Reason for declining<textarea id="declineReason" rows="4" minlength="5" placeholder="Please tell us why you cannot accept the agreement."></textarea></label><button class="danger" id="confirmDecline" type="button">Submit decline</button></div>
+      <p id="agreementMessage" class="muted" role="status"></p>
+    </section>
+
+    <section class="portal" id="portalView" hidden>
+      <header class="topbar">
+        <div><div class="eyebrow">PATCHGRID / BETA WORKSPACE</div><h1 id="welcome">Tester workspace</h1></div>
+        <div class="top-actions"><span class="pill" id="rolePill">TESTER</span><button class="ghost" id="logoutBtn" type="button">Sign out</button></div>
+      </header>
+      <div class="statusbar"><span><strong id="saveState">Ready</strong></span><span>Active time: <strong id="activeTime">00:00:00</strong></span><span>Last saved: <strong id="lastSaved">Not yet</strong></span></div>
+      <div class="content-grid">
+        <section class="main-panel">
+          <div class="section-heading"><div><div class="eyebrow">YOUR TEST PLAN</div><h2>Work through the required checks</h2></div></div>
+          <div class="progress-track"><span id="progressBar"></span></div>
+          <div class="progress-meta"><span id="progressText">0 of 0 required tasks complete</span><span id="progressPercent">0%</span></div>
+          <div id="taskGroups"></div>
+        </section>
+        <aside class="side-panel">
+          <div class="eyebrow">REPORTING GUIDE</div>
+          <h3>Describe what you found</h3>
+          <p class="muted">Answer each question in its own text field. You may type, copy, and paste plain text. Attach up to 3 image/video evidence files to each question; images are limited to 10 MB and videos to 50 MB.</p>
+          <div class="callout"><span class="callout-dot"></span><span>Explore answers are limited to 1,000 characters per question and are saved together in one D1 response.</span></div>
+          <div class="side-divider"></div>
+          <div class="eyebrow">YOUR ASSIGNMENT</div>
+          <p id="assignmentText" class="assignment-text">Specialist pack assigned to you after sign-in.</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <script src="stage.js"></script><script src="beta.js"></script>
+</body>
+</html>

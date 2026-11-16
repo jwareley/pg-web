@@ -1,0 +1,13 @@
+db/
+scripts/
+.wrangler/
+_worker.js
+BETA_WORK.md
+wrangler.toml
+node_modules/
+\.git/
+*.sql
+*.mjs
+*.heic
+.idea/
+.DS_Store

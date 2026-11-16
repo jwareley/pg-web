@@ -1,0 +1,16 @@
+name = "patchgrid-web"
+main = "_worker.js"
+compatibility_date = "2026-08-30"
+
+[assets]
+directory = "."
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pg-beta-db"
+database_id = "2e0f6e55-8e38-4368-b2e2-4d53b0f60441"
+
+[[r2_buckets]]
+binding = "EVIDENCE"
+bucket_name = "pg-beta-evidence"

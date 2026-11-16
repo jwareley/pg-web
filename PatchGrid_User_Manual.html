@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PatchGrid - M3 User Manual</title>
+  <style>
+    :root { --ink:#20252b; --muted:#5d6670; --line:#d9dee4; --accent:#b88600; --soft:#f5f7f9; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#eef1f4; color:var(--ink); font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { max-width:980px; margin:0 auto; background:#fff; padding:54px 72px 72px; }
+    h1 { margin:0 0 8px; font-size:38px; line-height:1.1; }
+    h2 { margin:38px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--line); font-size:25px; }
+    h3 { margin:25px 0 8px; font-size:19px; }
+    h4 { margin:20px 0 8px; font-size:17px; }
+    p { margin:9px 0; }
+    ul,ol { padding-left:26px; }
+    li { margin:4px 0; }
+    .lede { color:var(--muted); font-size:18px; margin-bottom:28px; }
+    .note { background:var(--soft); border-left:4px solid var(--accent); padding:12px 16px; margin:18px 0; }
+    .title-page { position:relative; min-height:760px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; page-break-after:always; }
+    .title-page img { width:min(440px, 78%); height:auto; margin-bottom:34px; }
+    .title-page .vc-footer-logo { width:165px; height:auto; margin:24px 0 0; }
+    .title-page h1 { font-size:48px; margin:0 0 8px; }
+    .title-page h2 { border:0; margin:0 0 12px; padding:0; font-size:25px; }
+    .title-page .version { color:var(--muted); font-size:17px; }
+    .disclaimer { background:#fff7e6; border:1px solid #d5a63a; border-left:5px solid #b88600; padding:14px 17px; margin:18px 0 26px; }
+    .feature-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin:18px 0 30px; }
+    .feature-summary section { background:var(--soft); border-top:3px solid var(--accent); padding:14px 16px 12px; break-inside:avoid; page-break-inside:avoid; }
+    .feature-summary h3 { margin:0 0 8px; }
+    .feature-summary ul { margin:0; padding-left:20px; }
+    .feature-summary li { margin:4px 0; }
+    figure { margin:24px -72px; padding:22px 42px 18px; background:#000; text-align:center; }
+    figure img { display:block; width:100%; height:auto; margin:0 auto; }
+    figcaption { color:#d8d8d8; font-size:13px; line-height:1.4; margin-top:10px; text-align:left; }
+    code { background:#f0f2f4; padding:1px 4px; border-radius:3px; }
+    table { width:100%; border-collapse:collapse; margin:14px 0 22px; }
+    th,td { border:1px solid var(--line); padding:9px 11px; text-align:left; vertical-align:top; }
+    th { background:var(--soft); }
+    .footer { color:var(--muted); border-top:1px solid var(--line); margin-top:42px; padding-top:14px; font-size:13px; }
+    .copyright { text-align:center; font-size:11px; color:var(--muted); margin-top:14px; }
+    .running-header, .running-footer { display:none; }
+    .mode-icon { width:18px; height:18px; object-fit:contain; vertical-align:-4px; margin-right:4px; }
+    .mode-icon.edit { filter:invert(1); background:#20252b; border-radius:3px; padding:2px; }
+    .settings-block { break-inside:avoid; page-break-inside:avoid; }
+    @media print { @page { margin:18mm 16mm; } body { background:#fff; } main { max-width:none; padding:0 0 42px; } .running-header, .running-footer { display:none; } .copyright { display:none; } figure { margin:18px -16mm; padding:12px 16mm; } main h2, main h3, main h4 { break-after:avoid; page-break-after:avoid; padding-top:0; } .feature-summary h3, .title-page h2 { break-before:auto; page-break-before:auto; } table, .note, figure, .settings-block { break-inside:avoid; page-break-inside:avoid; } .feature-summary { gap:10px; margin:12px 0 20px; } .feature-summary section { padding:10px 12px 8px; } .feature-summary h3 { font-size:16px; margin-bottom:5px; } .feature-summary li { margin:2px 0; font-size:14px; line-height:1.35; } }
+    @media print {
+      /* Let short subsections share a page; keep each heading with its content. */
+      main h2 { margin-top:24px; }
+      main h3 { margin-top:18px; }
+      main h4 { margin-top:14px; }
+      p, li { orphans:3; widows:3; }
+      ol, ul { margin-top:8px; margin-bottom:8px; }
+      ol, ul, .manual-step { break-inside:avoid; page-break-inside:avoid; }
+      /* Search, Patch settings, Global and the appendix start on new pages; subsections flow normally. */
+      #search, #patch-settings, #global-settings, #appendix-a-background-midi { break-before:page; page-break-before:always; }
+    }
+    @media screen and (max-width:700px) { main { padding:28px 22px; } h1 { font-size:31px; } }
+  </style>
+</head>
+<body>
+<div class="running-header">PatchGrid - M3 User Manual</div>
+<main>
+  <section class="title-page">
+    <img src="PatchGrid_User_Manual_images/patchgrid_logo_white.png" alt="PatchGrid logo">
+    <h1>M3</h1>
+    <h2>User Manual</h2>
+    <div class="version">Version 1.0.8</div>
+    <img class="vc-footer-logo" src="PatchGrid_User_Manual_images/virtual_controller_logo.png" alt="Virtual Controller logo">
+  </section>
+  <p class="lede">A practical guide to arranging, selecting, and performing Korg M3 patches.</p>
+  <p>PatchGrid is a performance-oriented patch organizer for the Korg M3. It presents patches as a 4 x 4 grid so you can select sounds quickly, arrange them into pages, and adjust useful performance controls from one screen.</p>
+  <nav class="toc" aria-label="Table of contents">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#feature-summary">Feature summary</a></li>
+      <li><a href="#disclaimer">Disclaimer</a></li>
+      <li><a href="#boot-screen">The PatchGrid Boot screen</a></li>
+      <li><a href="#before-you-begin">Before you begin</a></li>
+      <li><a href="#patchgrid-screen">The PatchGrid screen</a></li>
+      <li><a href="#play-mode">Play mode</a></li>
+      <li><a href="#search">Search</a></li>
+      <li><a href="#edit-mode">Edit mode</a></li>
+      <li><a href="#storage">Settings</a><ul><li><a href="#library-assign">Library / Assign</a></li><li><a href="#global-settings">Global</a></li></ul></li>
+      <li><a href="#saving">Saving and persistence</a></li>
+      <li><a href="#troubleshooting">Troubleshooting</a></li>
+      <li><a href="#quick-reference">Quick reference</a></li>
+      <li><a href="#appendix-a-background-midi">Appendix A: Background Midi (iOS 26 or later)</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="feature-summary">Feature summary</h2>
+  <div class="feature-summary">
+    <section><h3>Launch and layout</h3><ul><li>Instant patch launch from a visual 4 x 4 slot grid</li><li>Multi-page PatchGrids for larger sound sets</li><li>Independent reorder modes for PatchGrids and pages</li><li>One-touch selection sends the chosen patch directly to the M3</li><li>Dedicated Play view for quick access during performance</li><li>Dedicated Edit view for building and managing PatchGrids</li><li>Lock or unlock slot-grid dragging in Play view</li><li>Template PatchGrids filled from enabled M3 banks</li><li>Play-view patch search from the search icon</li></ul></section>
+    <section><h3>Sounds and storage</h3><ul><li>Stores both PROG and COMBI patches in the same PatchGrid workflow</li><li>Up to 16 slots per page</li><li>Up to 8 pages per PatchGrid</li><li>Up to 128 saved PatchGrids</li><li>Default PatchGrid auto-populates starter sounds from PROG and COMBI categories</li><li>Default PatchGrid includes starter notes explaining its sample sounds</li></ul></section>
+    <section><h3>Per-slot control</h3><ul><li>Per-page, per-patch performance-control overrides</li><li>Saved controls include Tempo, Volume, EQ, Transpose, SW1, SW2, Drum Track, and KARMA</li><li>16 slot colours with Auto Colour and quick two-tap colour selection</li><li>Patch search for assigning sounds to slots</li></ul></section>
+    <section><h3>Editing and management</h3><ul><li>PatchGrid naming with duplicate-name protection and input validation</li><li>Rename, duplicate, clear, and hide PatchGrids</li><li>Duplicate PatchGrids with all pages and slot data under a new name</li><li>Duplicate and clear individual pages</li><li>Copy and paste single slots between positions</li><li>Remembers the last selected page and slot when reloaded</li></ul></section>
+  </div>
+  <h2 id="disclaimer">Disclaimer</h2>
+  <div class="disclaimer">Stringline Productions takes no responsibility financially or otherwise for any data loss or device malfunction that may occur by using this product. This product has no affiliation with or endorsement from Korg Inc. The manual may not show the exact product images, but it is regularly updated to match the latest versions of the app. Any queries regarding this app must be directed to Stringline Productions.</div>
+
+  <h2 id="before-you-begin">Before you begin</h2>
+  <p>PatchGrid supports direct USB-wired MIDI and Bluetooth MIDI connections between the iPad and the Korg M3. Apple Network MIDI, RTP-MIDI, Wi-Fi MIDI, and other network connection methods are not supported. Network MIDI ports may still appear in the MIDI selectors; do not select them for the M3 connection.</p>
+  <div class="note">Connect and select the MIDI input and output used by the M3, then allow patch loading to finish. Selecting a patch sends bank and program changes to the configured MIDI output.</div>
+
+  <h2 id="boot-screen">The PatchGrid Boot screen</h2>
+  <figure><img src="PatchGrid_User_Manual_images/01_patchgrid_boot.png" alt="PatchGrid Boot screen"><figcaption><strong>Boot screen.</strong> Detect supported M3 hardware and expansion boards, load patch data, select MIDI devices, connect to the M3, or skip the connection for offline editing.</figcaption></figure>
+  <p>The Boot screen is the first screen used to prepare PatchGrid. It detects the connected M3 and supported expansion boards, loads the available patch data, and provides the MIDI connection controls.</p>
+  <p>The <strong>Keyboard</strong> selector can be used to choose from the available MIDI inputs, including multiple connected keyboard inputs. <strong>M3 Input</strong> selects the MIDI input used to receive data from the M3, and <strong>M3 Output</strong> selects the MIDI output used to send patches and controls to the M3. Select the supported direct USB or Bluetooth M3 ports only: Apple Network MIDI and RTP-MIDI ports are not supported, even if they appear in these lists. Use <strong>Connect</strong> after selecting the required devices.</p>
+  <p>Select <strong>Skip M3 Connection</strong> when you want to use PatchGrid without connecting to an M3. PatchGrid remains available for offline editing, browsing, and organizing patches; the M3 will not receive patch changes until a connection is made.</p>
+  <p>The <strong>Inventory</strong> text button switches the visible patch inventory between patches imported from the M3 and the preset patches supplied with PatchGrid. Use it to confirm which patch source is being displayed before assigning sounds.</p>
+  <p>The <strong>Privacy Policy</strong> and <strong>PG Manual</strong> text links open the product privacy information and this user manual.</p>
+  <figure><img src="PatchGrid_User_Manual_images/06_boot_failure.png" alt="PatchGrid Boot failure screen"><figcaption><strong>Boot failure screen.</strong> If the M3 connection fails, check Settings &gt; MIDI &gt; M3, then choose Connect to try again, or select Skip M3 Connection to continue offline.</figcaption></figure>
+
+  <h2 id="patchgrid-screen">The PatchGrid screen</h2>
+  <p><strong><img class="mode-icon" src="PatchGrid_User_Manual_images/play_icon.png" alt="Play symbol">Play</strong> selects and performs patches. <strong><img class="mode-icon edit" src="PatchGrid_User_Manual_images/edit_icon.png" alt="Grid icon">Edit</strong> manages PatchGrids and pages, edits notes, and shows the Grid Table. <strong><img class="mode-icon" src="PatchGrid_User_Manual_images/settings_icon.png" alt="Gear icon">Settings</strong> opens MIDI, Config, Import, and Patch tools.</p>
+  <p>The centre of Play mode is a 4 x 4 grid of 16 slots. A slot can contain a Program, a Combination, or be empty. Each PatchGrid can contain up to 8 pages, and the application supports up to 128 saved PatchGrids.</p>
+  <figure><img src="PatchGrid_User_Manual_images/02_patchgrid_play.png" alt="PatchGrid Play view"><figcaption><strong>Play view at a glance.</strong> The coloured slots are the patches in the current page. The view shows the selected patch, colour-coded slots, tempo, volume, EQ, transpose, and navigation controls.</figcaption></figure>
+  <p>The MAIN, VOL, slider, and EQ controls sit lower in the Play view; DRUM, KARMA, SW1, and SW2 are repositioned on the left; and the transpose controls sit farther right. The VC logo is visible in Play mode and hidden in Edit mode. The PatchGrid selector uses a 2 x 2 layout, with its previous and next arrows kept within the selector width.</p>
+  <p>The search icon is in the Play view header. Use it to search loaded patch names or patch numbers, filter results by patch type or bank, preview a result, and assign it to the selected slot.</p>
+  <h2 id="play-mode">Play mode</h2>
+  <h3>Select a patch</h3>
+  <ol><li>Click <strong>Play</strong>.</li><li>Click a filled slot.</li><li>PatchGrid sends the corresponding bank and program change to the M3.</li></ol>
+  <p>Click an empty slot to select it. In Play mode, drag it through the available patches to populate it, or use Edit mode when you want to browse and assign a specific patch.</p>
+  <h3>Change page or PatchGrid</h3>
+  <ul><li>Use the arrows beside the grid to change page.</li><li>Use the PatchGrid selector arrows to move through saved PatchGrids.</li><li>Select a PatchGrid entry to load it.</li><li>In Edit mode, tap the combined reorder icon beside <strong>PatchGrid</strong> to turn PatchGrid reorder mode on or off.</li><li>Use the <strong>Pages</strong> reorder icon separately when you want to reorder pages.</li></ul>
+  <p>When a reorder mode is on, its icon is yellow and remains active until tapped again. Drag the selected PatchGrid or page to reorder it; the insertion marker shows whether it will be placed above or below the target row. When reorder mode is off, dragging the list scrolls it. PatchGrid and page reordering are independent, and the order is saved and restored after the app restarts. The first page of the built-in Default PatchGrid cannot be deleted or cleared, and its next-page arrow is hidden when no next page is available.</p>
+  <p>The slot-grid lock icon is at the bottom-left of the grid. Tap the lock to unlock slot dragging, move slots to different positions within the current page, then tap it again to lock the grid.</p>
+  <p>Template PatchGrids are created from the enabled INT and USR banks in <strong>Settings &gt; Config &gt; Grid/Pages</strong>. Each enabled bank supplies a PatchGrid page pre-filled with patches from the loaded M3 patch list. The <strong>Template</strong> control in Play mode selects the generated template view.</p>
+  <h3>Performance controls</h3>
+  <ul><li><strong>Drum</strong> toggles the drum track.</li><li><strong>KARMA On/Off</strong> toggles KARMA.</li><li><strong>SW1</strong> and <strong>SW2</strong> toggle the M3 switches.</li><li><strong>TRANSPOSE</strong> changes transpose from -12 to +12 semitones.</li><li>Tempo and volume can be adjusted from the performance panel. Drag rotary controls or the volume slider vertically.</li></ul>
+  <h3>Bi-directional M3 control</h3>
+  <p>When PatchGrid is connected through the selected <strong>M3 Input</strong> and <strong>M3 Output</strong> ports, supported changes can travel in both directions. Changes made in PatchGrid are sent to the M3. Changes made on the M3 to Tempo, Drum Track, KARMA, SW1, SW2, and Program or Drum Track EQ are immediately reflected in the controls displayed for the selected PatchGrid slot. Program and Drum Track EQ synchronization applies to PROG patches.</p>
+  <p>M3-originated control changes are shown as live values. They are not sent back to the M3 and are not automatically saved as slot overrides. Use <strong>Save</strong> on a normal PatchGrid page when you want to retain the current supported performance-control values for that patch and page.</p>
+  <p>PatchGrid also recognizes patch selections made on the M3. It uses the M3 mode to distinguish a PROG from a COMBI, then matches the bank and program number against the loaded patch information. When a match is found, the selected PatchGrid slot immediately displays that patch and its type. If the selection cannot be matched, the current slot remains unchanged.</p>
+  <h3>Modal popups</h3>
+  <p>Play mode provides larger modal controls for Tempo and KARMA. A modal temporarily covers the slot grid so the selected control can be adjusted directly.</p>
+  <h4>Tempo popup</h4>
+  <p>Tap the displayed tempo value to open the Tempo popup. It starts with the selected slot's current tempo and supports values from 40.00 to 300.00 BPM.</p>
+  <p>Choose the keypad icon to enter a tempo directly, including a decimal value, then tap <strong>Set</strong> to apply it. Choose the encoder icon to adjust the value with a rotary drag, then tap <strong>Set</strong>. The pink arrows change the tempo by 1 BPM and the blue arrows fine-tune it by 0.01 BPM.</p>
+  <p>Enable <strong>Presets</strong> to show the supplied tempo choices: <strong>Slow 60</strong>, <strong>Medium Slow 80</strong>, <strong>Medium 100</strong>, <strong>Fast 130</strong>, and <strong>Very Fast 145</strong> BPM. Selecting a preset applies it immediately. Tap outside the popup, press Escape, or move focus away to close it without applying an unfinished keypad or encoder value.</p>
+  <figure><img src="PatchGrid_User_Manual_images/10_tempo_modal_encoder.png" alt="Tempo popup"><figcaption><strong>Tempo popup.</strong> Adjust tempo with a rotary drag, the whole-number and 0.01 BPM fine-tuning arrows, Presets, and Set.</figcaption></figure>
+  <h4>KARMA Controls popup</h4>
+  <p>Tap the small arrow beside <strong>KARMA On/Off</strong> to open the KARMA Controls popup. Use <strong>KARMA Link</strong> to link Drum Track operation to KARMA, and use <strong>Latch</strong> to switch KARMA Latch on or off.</p>
+  <p>For a COMBI, direct Module buttons select <strong>M</strong>, <strong>A</strong>, <strong>B</strong>, <strong>C</strong>, or <strong>D</strong>. A PROG uses the master module only. Direct Scene buttons select Scene 1 through Scene 8. The Module and Scene previous and next arrows step through the available values and wrap at the ends.</p>
+  <p>Use the Module or Scene <strong>Reset</strong> control to restore that original value. The main <strong>Reset</strong> restores the patch's original KARMA On/Off, Link, Latch, Module, and Scene settings. Tap outside the popup to close it. The KARMA On/Off control remains available while the popup is open.</p>
+  <figure><img src="PatchGrid_User_Manual_images/08_karma_modal_combi.png" alt="KARMA Controls popup"><figcaption><strong>KARMA Controls for a COMBI.</strong> Direct Master, Module A-D, Latch, Link, and Scene 1-8 controls, plus previous, next, and Reset controls.</figcaption></figure>
+  <p>On a normal PatchGrid page, use <strong>Save</strong> to store the current performance-control values for the selected patch on that page. When that patch is loaded again, its saved controls are restored and sent to the M3, and <strong>Save</strong> is highlighted. Tap the highlighted <strong>Save</strong> button to remove only that patch's saved controls for the current page and return to the patch's normal controls. <strong>Save</strong> is not available for the protected Default PatchGrid.</p>
+  <p>In Play mode, drag a filled slot horizontally through patch numbers in its bank or vertically through categories. Both directions wrap at the end. During the drag, the selected slot shows the previous, current, and next patch names; the preview disappears when the drag ends and the selected patch is saved.</p>
+  <p>To fill an empty slot by dragging through patches, start a straight drag on the empty slot and continue through the available patch selection. The selected slot changes as the drag continues and the final selection is saved when the drag ends.</p>
+  <p>The <strong>MIDI Status Strip</strong> initially shows <strong>MIDI</strong>. Tap it to expand <strong>SYSEX</strong>, <strong>PC</strong>, <strong>CC</strong>, <strong>BANK</strong>, and <strong>NOTE</strong>, then tap again to collapse it. The <strong>KARMA Status Strip</strong> initially shows <strong>KARMA</strong>; tap it to show <strong>LATCH</strong> or <strong>OFF</strong>, the active module, and the scene for the selected slot.</p>
+  <p>When the selected PROG or COMBI contains drum-track data, Play mode shows the drum pattern category, drum pattern, and drum kit above the performance controls. PatchGrid resolves these names from the loaded M3 MIDI dump and its drum pattern and drum kit lookups.</p>
+  <figure><img src="PatchGrid_User_Manual_images/07_play_info.png" alt="PatchGrid Play patch, MIDI, KARMA, and drums information"><figcaption><strong>Play information.</strong> The header can show the selected patch, MIDI status, KARMA status, and drum information together.</figcaption></figure>
+  <h2 id="search">Search</h2>
+  <p>Open <strong>Search</strong> using the magnifying-glass icon in the centre of the PatchGrid selector in Play view. Wait for patch loading to complete first. Search uses the loaded patch catalogue; hearing a result requires a connected instrument. The keyboard stays hidden until you tap the search field.</p>
+  <div class="manual-step"><h3>Target slots, colours, and closing Search</h3><ul>
+    <li><strong>Mini PatchGrid:</strong> tap a slot in the small 4 x 4 grid to choose the assignment target. This preserves the selected result and its Patch Card; choosing a different target alone does not assign the preview.</li>
+    <li><strong>Target pages:</strong> use the mini-grid page arrows, when available, to target another existing page without closing Search or losing the selected preview.</li>
+    <li><strong>Slot colours:</strong> tap the same mini-grid target again to cycle its colour. The colour change is saved.</li>
+    <li><strong>Search Link:</strong> tap the padlock beside the patch-name area to switch between immediate assignment and preview-only result selection. Performance controls remain available while Search is open.</li>
+    <li><strong>Result limit:</strong> up to 4,096 matches are returned. Narrow the text or filters when you need a smaller set.</li>
+    <li><strong>Close:</strong> in landscape, tap outside the Search area or press Escape. Closing clears the search text, filters, and preview; it does not undo assignments or colour changes already saved. Dismissing the on-screen keyboard alone leaves Search open.</li>
+    <li><strong>Portrait layout:</strong> Search is integrated into Play view. <strong>Find</strong> locates the selected slot&#x27;s patch in Search; <strong>Update</strong> assigns the preview to the selected slot. Use the Edit header to leave the portrait Search workflow rather than expecting landscape dismissal.</li>
+  </ul></div>
+  <div class="manual-step"><h3>Text search</h3>
+  <p>Tap the <strong>Search</strong> field and enter a patch name, part of a name, or a bank/patch number such as <strong>I-B050</strong>. Results update as you type. Searches ignore letter case; name searches treat punctuation as word separators. Multiple search words can match in any order, including the starts of words. Exact patch numbers and closer name matches appear before less exact matches within each patch-type group.</p>
+<p>The field accepts up to 64 printable English letters, numbers, spaces, and punctuation characters. The result strip shows <strong>PROG</strong>, <strong>COMBI</strong>, <strong>GM</strong>, <strong>VAR</strong>, and <strong>DRUMS</strong> counts. Tap a group to show only that type; tap it again to remove that result-type filter. Scroll longer lists by dragging, using the scrollbar, or using a mouse wheel.</p>
+  <figure><img src="PatchGrid_User_Manual_images/22_search_text.png" alt="Text search. The example searches for Perc within the selected Organ / E.Organ category and sub-category."><figcaption>Text search. The example searches for Perc within the selected Organ / E.Organ category and sub-category.</figcaption></figure></div>
+  <div class="manual-step"><h3>Search filters</h3>
+  <p>Choose <strong>PROG</strong> or <strong>COMBI</strong>, then <strong>BANK</strong> or <strong>CATEGORY</strong>. BANK offers the available Internal and User banks. PROG bank filtering also includes <strong>GM</strong>, variations <strong>g(1)</strong> to <strong>g(9)</strong>, and <strong>g(d)</strong> for GM drums. <strong>INT-F</strong> cannot be selected for PROG when no RADIAS board is detected.</p>
+<p>CATEGORY lets you choose a category and then a sub-category. Tap a selected bank, category, or sub-category again to deselect it. Changing patch type or switching BANK/CATEGORY clears the previous filter selection. <strong>CLEAR</strong> removes the bank/category selections.</p>
+<p>Tap <strong>SEARCH</strong> to show matches, with or without text. Text and selected filters work together. The search bar summarises the active bank or category/sub-category. Tap that summary, or <strong>BACK</strong> in the results view, to return to the filter controls.</p>
+  <figure><img src="PatchGrid_User_Manual_images/23_search_filters.png" alt="Search filters. Choose a patch type and bank or category; this example selects PROG and the Organ category."><figcaption>Search filters. Choose a patch type and bank or category; this example selects PROG and the Organ category.</figcaption></figure></div>
+  <div class="manual-step"><h3>Search selection and slot assignment</h3>
+  <p>Tap a result to show its <strong>Patch Card</strong> and information: name, type, category, sub-category, source, and patch number. Source can be User, Preset, or Unknown. The selected result is outlined.</p>
+<p><strong>Check the Search Link padlock before selecting a result.</strong> With the link locked, tapping a result immediately assigns it to the target slot, saves the change, and sends the patch selection to the connected instrument. With the link unlocked, tapping a result changes only the preview and sends no MIDI selection. Tap the large Patch Card to assign the preview to the target slot and send the selection. Search remains open so you can continue selecting sounds.</p>
+  <figure><img src="PatchGrid_User_Manual_images/24_search_assignment.png" alt="Selection and assignment. I-B050 Dist.Organ Perc is selected; its Patch Card, patch information, and mini-grid target are shown."><figcaption>Selection and assignment. I-B050 Dist.Organ Perc is selected; its Patch Card, patch information, and mini-grid target are shown.</figcaption></figure></div>
+  <h2 id="edit-mode">Edit mode</h2>
+  <p>The Edit view is for managing PatchGrids and pages, editing notes, selecting slots, and reviewing the Grid Table. Patch assignment and detailed performance controls are handled from the Play view and Settings.</p>
+  <p>The selected slot has a thicker outline for clear identification. The VC logo is hidden in Edit mode.</p>
+  <h3>Grid Table view</h3>
+  <h3>Edit notes</h3>
+  <ol><li>Click the notes area in Edit mode.</li><li>Type the notes. Notes are limited to 500 characters; the remaining-character counter shows the available space.</li><li>Click <strong>Save</strong> or <strong>Cancel</strong>.</li></ol>
+  <p>Escape cancels an active notes edit. Losing focus does not save it. The notes area scrolls when the text is longer than the visible field. A new Default PatchGrid starts with: “This patch grids load the first of each category in PROG and COMBI to give you some options to try out the sounds.”</p>
+
+  <h2>Manage PatchGrids</h2>
+  <h3>Create</h3>
+  <ol><li>Open Edit and click <strong>New</strong> beside Patch Grids.</li><li>Enter a unique, non-empty name of no more than 23 characters.</li><li>Press Return or click <strong>Add</strong>.</li></ol>
+  <p><strong>Default PatchGrid</strong> is reserved. Escape or <strong>Exit</strong> cancels without creating a file.</p>
+  <h3>Rename</h3>
+  <p>Select a PatchGrid, click <strong>Rename</strong> or the pencil icon, edit the name, then confirm with Return or <strong>Add</strong>. Invalid, duplicate, empty, and reserved names are rejected without changing the existing name.</p>
+  <h3>Pages</h3>
+  <ul><li><strong>New</strong> adds a blank page, up to eight pages.</li><li><strong>Duplicate</strong> copies the current page.</li><li><strong>Clear</strong> removes assignments and settings from the current page.</li><li>The trash button deletes a page after a second confirmation click.</li></ul>
+  <p>Page 1 cannot be deleted. The first page of Default PatchGrid cannot be cleared. Tap the combined reorder icon beside <strong>Pages</strong> to turn page reorder mode on or off, then drag the selected page. The insertion marker shows where it will be placed. The mode remains active until tapped again. The Default PatchGrid cannot receive additional pages; its next-page arrow is hidden. When blocked, the app warns: “The Default Page cannot be deleted. No new Page's can be added to this PatchGrid.”</p>
+  <h3>Clear, duplicate, or delete</h3>
+  <p>Use <strong>Clear</strong> to empty a selected PatchGrid. Use <strong>Duplicate</strong> to enter a new unique name, then create an ordinary PatchGrid containing a copy of every page and its slot data. The trash button requires a second confirmation click before deletion. The built-in Default PatchGrid cannot be cleared or deleted.</p>
+
+  <div class="manual-step">
+  <h2>Copy and paste slots</h2>
+  <h3>One slot</h3>
+  <ol><li>Select the source slot.</li><li>Click <strong>Copy</strong>.</li><li>Click the target slot.</li></ol>
+  <p>The patch, controls, and colour are pasted together. Click Copy again to cancel.</p>
+  </div>
+  <div class="manual-step">
+  <h2 id="storage">Settings</h2>
+  <p>The <strong><img class="mode-icon" src="PatchGrid_User_Manual_images/settings_icon.png" alt="Gear icon">Settings</strong> item contains MIDI, configuration, import, and patch-library workflows.</p>
+  <h3 class="settings-section">MIDI settings</h3>
+  <div class="settings-block"><h4>M3 Midi connection</h4><p>Open <strong>Settings &gt; MIDI &gt; M3</strong> to choose the MIDI input and output used for communication with the Korg M3.</p>
+  <figure><img src="PatchGrid_User_Manual_images/21_settings_m3_connection.png" alt="M3 Midi connection"><figcaption><strong>M3 Midi connection.</strong> The selected M3 MIDI input and output connect PatchGrid to the instrument.</figcaption></figure></div>
+  </div>
+  <div class="settings-block"><h4>Router</h4><p>Use <strong>Router</strong> to add PatchGrid MIDI inputs and outputs. Connect input rows to output rows to create MIDI routing, then configure channel and filtering options for each route.</p>
+  <figure><img src="PatchGrid_User_Manual_images/20_settings_ports.png" alt="MIDI Router settings"><figcaption><strong>MIDI Router.</strong> Add inputs and outputs and connect them for routing. This example routes WM-1 Bluetooth to PG App Input.</figcaption></figure></div>
+  <div class="settings-block"><h4>Bi-directional</h4><p>Use <strong>Bi-directional</strong> to choose which messages received from the M3 are allowed to update PatchGrid. The available groups are <strong>Drum</strong> (On/Off, Pattern, and Kit), <strong>KARMA</strong> (On/Off, Latch On/Off, Drum Link, Module, and Scene), and <strong>Patch</strong> (Select). Each message can be enabled or disabled independently.</p>
+  <figure><img src="PatchGrid_User_Manual_images/19_settings_bidirectional.png" alt="MIDI Bi-directional settings"><figcaption><strong>MIDI Bi-directional.</strong> Enable or disable incoming Drum, KARMA, and Patch messages.</figcaption></figure></div>
+  <div class="settings-block"><h4>Learn</h4><p>Use <strong>Learn</strong> to assign MIDI controls to <strong>Volume</strong>, <strong>EQ</strong>, <strong>Switch</strong>, <strong>Transpose</strong>, <strong>Slot</strong>, <strong>KARMA</strong>, <strong>Module</strong>, <strong>Scene</strong>, <strong>PatchGrid</strong>, <strong>PatchList</strong>, and <strong>Mode</strong>.</p>
+  <figure><img src="PatchGrid_User_Manual_images/18_settings_midi_learn.png" alt="MIDI Learn settings"><figcaption><strong>MIDI Learn.</strong> Assign incoming MIDI messages to PatchGrid parameters.</figcaption></figure></div>
+  <h3 class="settings-section">Config settings</h3>
+  <div class="settings-block"><h4>General</h4><p><strong>Backup</strong> can be enabled and configured with an interval, retention period, and minimum number of backups. <strong>Export</strong> writes application data to a selected <code>app.json</code> path.</p>
+  <figure><img src="PatchGrid_User_Manual_images/17_settings_general.png" alt="General Config settings"><figcaption><strong>General Config.</strong> Configure backup, export application data and logs, and access optional Background MIDI.</figcaption></figure></div>
+  <div class="settings-block"><h4>Slot</h4><p><strong>Slot</strong> contains the 4 x 4 grid setup, the slot colour palette, gesture settings, and <strong>Slot Drag</strong>. Enable Slot Drag when you want to change a slot's patch by dragging in Play mode.</p>
+  <figure><img src="PatchGrid_User_Manual_images/16_settings_slot.png" alt="Slot Config settings"><figcaption><strong>Slot Config.</strong> Set the grid, gestures, colours, and Slot Drag.</figcaption></figure></div>
+  <div class="settings-block"><h4>Tempo</h4><p><strong>Tempo</strong> controls the tempo modal. Enable the modal, show or hide presets, choose <strong>Keypad</strong> or <strong>Encoder</strong> entry, and enable fine tuning.</p>
+  <figure><img src="PatchGrid_User_Manual_images/15_settings_tempo.png" alt="Tempo Config settings"><figcaption><strong>Tempo Config.</strong> Configure the tempo modal and presets.</figcaption></figure></div>
+  <div class="settings-block"><h4>Controls</h4><p><strong>Controls</strong> determines which performance controls are shown in the Play view, including Drum, KARMA, SW1/SW2, Volume, EQ, and the small or full control groups.</p>
+  <figure><img src="PatchGrid_User_Manual_images/14_settings_controls.png" alt="Play-view Controls settings"><figcaption><strong>Play-view Controls.</strong> Choose the controls shown during performance.</figcaption></figure></div>
+  <div class="settings-block"><h4>Grid/Pages</h4><p><strong>Grid/Pages</strong> sets the maximum number of PatchGrids, maximum pages per PatchGrid, notes, and note length. Enable INT or USR banks to create template PatchGrids pre-filled with patches from the loaded M3 patch list.</p>
+  <figure><img src="PatchGrid_User_Manual_images/13_settings_grid_pages.png" alt="Grid and Pages settings"><figcaption><strong>Grid/Pages.</strong> Set limits, notes, and template banks.</figcaption></figure></div>
+  <div id="patch-settings" class="manual-step"><h3 class="settings-section">Patch settings</h3>
+  <div class="manual-step"><h4 id="library-assign">Library / Assign</h4>
+  <p>Open <strong>Settings &gt; Patch &gt; Library</strong> to assign imported patches to the M3 bank and patch positions recorded in PG. Libraries come from the <strong>Import</strong> (SysEx) or <strong>PCG</strong> menus. Importing stores the patch data; assigning tells PG where those sounds belong in the M3 patch selection.</p>
+  <ol><li>Select the library imported through the <strong>Import</strong> (SysEx) or <strong>PCG</strong> menu.</li><li>Select the <strong>COMBI</strong> or <strong>PROG</strong> patches to assign.</li><li>Select the <strong>M3 patch destination</strong>: INT or USR, the bank, and the patch number as appropriate.</li><li>Click <strong>+ADD</strong> to add the selection to the assignment review for synchronising PG with the imported M3 patch data.</li><li>Review the source and target rows, then click <strong>ASSIGN</strong> to save the assignments.</li></ol>
+  <p><strong>+ADD prepares the list; ASSIGN commits it.</strong> Match the destinations to the patch locations already loaded on your M3. Library assignment updates PG&#x27;s patch records; it does not upload the imported sounds to the instrument.</p></div>
+  <h4>Import from the M3</h4>
+  <p>Use <strong>Import</strong> to read patch data from the connected M3 into the application's patch storage.</p>
+  <ol><li>Open <strong>Settings</strong> using the Gear icon and choose <strong>Import</strong>.</li><li>Choose the patch type and the banks, categories, sub-categories, or patches to read.</li><li>Click <strong>Start</strong> to begin the MIDI extraction.</li><li>Wait for extraction to finish before returning to PatchGrid.</li></ol>
+  <p>Import is the device-connected workflow. It requests Program, Combination, or GM patch data from the M3 and stores the returned data. Click <strong>Cancel</strong> while extraction is in progress if you need to stop it.</p>
+  <p><strong>Why include PROG with COMBI?</strong> A COMBI refers to the Programs used by its timbres; the COMBI data alone do not contain those Program sounds. Importing the matching PROG data gives PG the information needed to resolve those timbres. Choose <strong>Import All PROG</strong> for a wider COMBI/PROG library, or <strong>Import Required PROG</strong> for only the selected Combis&#x27; required Programs. Leaving both options off imports no accompanying Programs.</p>
+  </div>
+  <div class="manual-step"><h4>Import (SysEx): COMBI with all PROG</h4>
+  <p>Connect to the M3, then open <strong>Settings &gt; Patch &gt; Import</strong>. Choose <strong>COMBI</strong> and select the required patches or banks; use <strong>All</strong> for the full COMBI selection. Choose <strong>Import All PROG</strong> to read the accompanying Program set from the device, then click <strong>Start</strong>.</p>
+  <p>Keep the M3 connected while the patch counter and progress bar advance. <strong>CANCEL</strong> stops an import in progress. When finished, open <strong>Library / Assign</strong> to map the imported COMBI and PROG data to the locations used on your M3.</p>
+  <figure><img src="PatchGrid_User_Manual_images/29_import_sysex_combi_programs.png" alt="SysEx import from the connected M3. The patch counter and progress bar show the transfer in progress."><figcaption>SysEx import from the connected M3. The patch counter and progress bar show the transfer in progress.</figcaption></figure></div>
+  <div class="manual-step"><h4>PCG import: COMBI with all PROG</h4>
+  <p>Open <strong>Settings &gt; Patch &gt; PCG</strong>, click <strong>Load</strong>, and choose a compatible M3 PCG file containing both COMBI and PROG data. Select the Combis to import, or use <strong>Select All</strong> for the displayed selection. After loading the file, choose <strong>Import All PROG</strong> to include all eligible, visible Programs in that PCG, then start the import.</p>
+  <p>PG analyses the file and resolves Combination dependencies, as shown below. It cannot import Program data that are absent from the PCG. Check <strong>Hide Init Patches</strong> if you intend to exclude initialised patches; leave it off if those patches must also be included. After import, use <strong>Library / Assign</strong> to synchronise PG&#x27;s patch positions.</p>
+  <figure><img src="PatchGrid_User_Manual_images/30_import_pcg_combi_programs.png" alt="PCG import. PG resolves Combination dependencies before completing the import; the example shows both PROG and COMBI data."><figcaption>PCG import. PG resolves Combination dependencies before completing the import; the example shows both PROG and COMBI data.</figcaption></figure></div>
+  <div class="manual-step"><h4>Assign a complete COMBI and PROG set</h4>
+  <p>Select the imported PCG library, then use <strong>+ALL</strong> in the COMBI section. PG also selects PROG +ALL so the combined set is included. Add it to the review and check the source and target summaries before clicking <strong>ASSIGN</strong>.</p>
+  <p>The example shows <strong>All Combi (7 banks)</strong> and <strong>All Prog (7 banks)</strong> assigned to Internal <strong>A-G</strong>. It illustrates the complete seven-bank COMBI/PROG selection, rather than assigning each patch separately. Wait for the progress bar to finish; <strong>CANCEL</strong> is available while assignment is running.</p>
+  <figure><img src="PatchGrid_User_Manual_images/27_library_assign_all.png" alt="Complete-set assignment. The COMBI and PROG summaries cover seven Internal banks A-G; the example is preparing the patch data."><figcaption>Complete-set assignment. The COMBI and PROG summaries cover seven Internal banks A-G; the example is preparing the patch data.</figcaption></figure></div>
+  <div class="manual-step"><h4>Assign one COMBI with its timbre programs</h4>
+  <p>Expand a COMBI bank and select the required Combination. Choose its destination bank and patch number, then click <strong>+ADD</strong>. Expand the pending COMBI row to review the dependent programs shown as <strong>TIMBRE</strong> rows.</p>
+  <p>Click <strong>ASSIGN</strong> to include the COMBI and its required available timbre programs in PG&#x27;s assignments. Check their source and target positions as well as the COMBI destination. Missing or invalid dependencies must be resolved; a broken COMBI is not silently assigned as a complete sound.</p>
+  <figure><img src="PatchGrid_User_Manual_images/28_library_assign_combi.png" alt="Single-COMBI assignment. Towards The Sun targets U-G000, with its dependent timbre programs listed below for review."><figcaption>Single-COMBI assignment. Towards The Sun targets U-G000, with its dependent timbre programs listed below for review.</figcaption></figure></div>
+  <h3 id="global-settings" class="settings-section">Global</h3>
+  <div class="manual-step"><p>Open <strong>Settings &gt; Global</strong> to access <strong>Basic</strong>, <strong>Audio</strong>, <strong>Category</strong>, and <strong>SubCategory</strong>. Basic and Audio share an editable set of Global settings. A connected M3 and complete Global data are needed to apply changes. These are instrument-wide settings, separate from the controls saved with an individual PatchGrid slot.</p>
+  <h4>Apply changes to the M3</h4>
+  <ol><li>Connect to the M3 using the correct MIDI input and output.</li><li>Adjust the required controls in <strong>Basic</strong> and/or <strong>Audio</strong>.</li><li>Tap <strong>APPLY</strong> at the bottom-right of either screen to send the combined Basic and Audio edits to the M3.</li><li>Wait while the button shows orange <strong>BUSY</strong>. Green <strong>DONE</strong> indicates that the M3 acknowledged the transfer. Red <strong>FAILED</strong> indicates a rejected, unsuccessful, or timed-out transfer; check the connection and retry.</li></ol>
+  <p>The Apply control is dimmed when the M3 is disconnected. If Global data are unavailable, allow the app to receive them from the M3 before retrying. Changing a staged control alone does not send that change to the instrument.</p>
+  <h4>Immediate effect switches</h4>
+  <p><strong>IFX</strong>, <strong>MFX</strong>, and <strong>TFX</strong> under <strong>Effect Global SW</strong> take effect immediately on a connected M3. They do not require APPLY. IFX toggles the insert-effect group; MFX toggles the master-effect group; TFX toggles the total effect. If any effect in an IFX or MFX group is enabled, tapping the group disables it; tapping a fully disabled group enables it.</p>
+  <p>Tap the <strong>Effect Global SW</strong> heading to disable all three effect groups together. Tap it again to restore their previous states. These switches are live, so their changes are not waiting for APPLY.</p>
+  <h4>Category and SubCategory</h4>
+  <p><strong>Category</strong> displays the loaded PROG or COMBI category names. <strong>SubCategory</strong> displays the sub-categories for the selected parent category. Choose the patch type and parent category to browse the corresponding list. These views browse existing names; they do not edit names or send changes with APPLY.</p></div>
+  <div class="manual-step"><h4>Basic</h4>
+  <p><strong>Master Tune</strong> adjusts tuning from -50 to +50 cents and displays the corresponding reference frequency. <strong>Transpose</strong> adjusts the global transposition from -12 to +12 semitones. Drag these knobs vertically.</p>
+  <p>Choose <strong>Velocity Curve 1-9</strong>, <strong>Aftertouch Curve 1-8</strong>, and <strong>Pre-Midi</strong> or <strong>Post-Midi</strong> for Convert Position. Tap <strong>APPLY</strong> to send these staged changes. The IFX, MFX, and TFX switches on this screen are the immediate-action exception described above.</p>
+  <p><strong>Current limitation - Master Volume:</strong> the 0-127 slider is displayed and its value is saved in PatchGrid, but this build does not send that value to the M3 in the Global Apply transfer. Do not rely on this slider to change the instrument&#x27;s volume.</p>
+  <figure><img src="PatchGrid_User_Manual_images/25_global_basic.png" alt="Global Basic. Use APPLY for tuning, transpose, curve, and conversion edits. IFX, MFX, and TFX act immediately."><figcaption>Global Basic. Use APPLY for tuning, transpose, curve, and conversion edits. IFX, MFX, and TFX act immediately.</figcaption></figure></div>
+  <div class="manual-step"><h4>Audio</h4>
+  <p>Choose <strong>Analog 1/2</strong> or <strong>SPDIF 1/2</strong> as the input source, and <strong>L/R</strong>, <strong>1/2</strong>, or <strong>3/4</strong> as the output destination. Each selection replaces the previous choice in its group.</p>
+  <p>For <strong>INPUT 1</strong> and <strong>INPUT 2</strong>, adjust the upper <strong>LEVEL</strong> knob, the lower pan knob, and <strong>SEND 1</strong> and <strong>SEND 2</strong>. Levels and sends use 0-127. Choose the main <strong>BUS</strong> from Off, L/R, IFX 1-5, individual outputs 1-4, or paired outputs 1/2 and 3/4. <strong>FX BUS</strong> and <strong>AUX BUS</strong> each offer Off, 1, or 2.</p>
+  <p><strong>PLAY</strong> enables an input; turning it off mutes that input when applied. <strong>SOLO</strong> selects one input at a time and mutes the other when applied. Tap the active SOLO again to clear it.</p>
+  <p><strong>Tap APPLY after editing Audio, including PLAY and SOLO.</strong> These controls are staged; they are not immediate effect switches. APPLY sends the Audio edits together with any pending Basic edits.</p>
+  <figure><img src="PatchGrid_User_Manual_images/26_global_audio.png" alt="Global Audio. Select the source, output and routing for both inputs, then tap APPLY to set the changes on the M3."><figcaption>Global Audio. Select the source, output and routing for both inputs, then tap APPLY to set the changes on the M3.</figcaption></figure></div>
+  <h3 class="settings-section">Leave the Settings view</h3>
+  <p>Click the <strong>Virtual Controller logo</strong> on the left to leave Settings. The app returns to the PatchGrid view after the settings workflow closes.</p>
+  <h2 id="saving">Saving and persistence</h2>
+  <p>PatchGrid saves assignments, page changes, slot controls, colours, notes, names, and page structure as they change. Performance-control overrides saved with Save belong to a specific patch on a specific page. Returning to Play also commits the current editing state and refreshes the PatchGrid list.</p>
+
+  <div class="manual-step">
+  <h2 id="troubleshooting">Troubleshooting</h2>
+  <h3>Patch names are missing</h3><p>Wait for patch loading to finish. PatchGrid requires both Program and Combination data before it can build the complete search index and Default PatchGrid.</p>
+  <h3>The M3 does not change sounds</h3><p>Check the selected MIDI output, connection, MIDI channel, and M3 receive status.</p>
+  <h3>A new PatchGrid was not created</h3><p>Check the name and confirm with Return or Add. Losing focus does not create it.</p>
+  <h3>A delete or clear action did not happen</h3><p>Deletion requires a second click. The built-in Default PatchGrid and its first page have additional protection.</p>
+  <h3>Edited text reverted</h3><p>Use Save for notes or Return/Add for a name. Escape or Cancel restores the previous value.</p>
+
+  </div>
+  <h2 id="quick-reference">Quick reference</h2>
+  <table><thead><tr><th>Task</th><th>Action</th></tr></thead><tbody>
+    <tr><td>Select a patch</td><td>Play &gt; click a filled slot</td></tr><tr><td>Move to another page</td><td>Click a page arrow</td></tr><tr><td>Re-order PatchGrids</td><td>Edit &gt; tap PatchGrid reorder icon &gt; drag selected PatchGrid</td></tr><tr><td>Re-order pages</td><td>Edit &gt; tap Pages reorder icon &gt; drag selected page</td></tr><tr><td>Search and assign a patch</td><td>Play &gt; search icon &gt; choose a result &gt; assign to selected slot</td></tr><tr><td>Move slots</td><td>Play &gt; unlock slot grid &gt; drag a slot</td></tr><tr><td>Enable template PatchGrids</td><td>Settings &gt; Config &gt; Grid/Pages &gt; enable INT or USR banks</td></tr><tr><td>Configure MIDI messages</td><td>Settings &gt; MIDI &gt; Bi-directional or Learn</td></tr><tr><td>Assign library patches</td><td>Settings &gt; Patch &gt; Library</td></tr><tr><td>Add a PatchGrid</td><td>Edit &gt; New &gt; name &gt; Add or Return</td></tr><tr><td>Rename a PatchGrid</td><td>Edit &gt; Rename or pencil &gt; name &gt; Add or Return</td></tr><tr><td>Add a page</td><td>Edit &gt; Pages &gt; New</td></tr><tr><td>Duplicate a page</td><td>Edit &gt; Pages &gt; Duplicate</td></tr><tr><td>Copy one slot</td><td>Select source &gt; Copy &gt; select target</td></tr>
+  </tbody></table>
+  <h2 id="appendix-a-background-midi">Appendix A: Background Midi (iOS 26 or later)</h2>
+  <p>Background MIDI is optional and is available on supported iPads running iPadOS 26 or later (the iPad operating system). It supports MIDI routing and instrument control while you use another app, including MIDI Router connections to external instruments when the M3 connection is skipped. It does not generate audio and does not guarantee uninterrupted background operation. On earlier iPadOS versions, these controls are not shown; use PatchGrid in the foreground.</p>
+  <div class="disclaimer"><strong>Important - live performance:</strong> PatchGrid&#x27;s full functionality is available while the app remains in the foreground, subject to the required MIDI connections. Switching to another app may interrupt MIDI transmission between PatchGrid and the Korg M3 or external MIDI instruments, even with Background MIDI enabled. Interruptions may cause stuck notes that persist until PatchGrid returns to the foreground. Do not switch away from PatchGrid during live performance or whenever uninterrupted MIDI communication is critical.</div>
+  <div class="manual-step">
+  <h3>A.1 Enable Background MIDI at startup</h3>
+  <p>On the Boot screen, select the <strong>Background MIDI</strong> checkbox beside <strong>Connect</strong>. The explanation shown below appears. Tap <strong>OK</strong> to close it; checking the box alone does not start a session. Then select <strong>Connect</strong> to use the M3, or choose <strong>Skip M3 Connection</strong> to continue without connecting the M3. Either action requests a background session when Background MIDI is checked. Skip retains separately configured keyboard inputs and MIDI Router routes to external instruments.</p>
+  <figure><img src="PatchGrid_User_Manual_images/appendix_a_01_boot_background_midi.png" alt="Boot explanation after selecting Background MIDI. Tap OK, then choose Connect or Skip M3 Connection."><figcaption>Boot explanation after selecting Background MIDI. Tap OK, then choose Connect or Skip M3 Connection.</figcaption></figure>
+  </div>
+  <div class="manual-step">
+  <h3>A.2 Understand the system notification</h3>
+  <p>iPadOS displays its own Background MIDI session notification, separate from PatchGrid&#x27;s InfoStrip. Session time refers to elapsed session time, not song progress or time remaining. iPadOS may refuse or end a session. Check the <strong>Background MIDI InfoStrip</strong>, beside the <strong>MIDI InfoStrip</strong>, for PatchGrid&#x27;s current session status. An active session shows elapsed time.</p>
+<p>In this screenshot, Apple&#x27;s notification shows a session time and a check mark while PatchGrid&#x27;s InfoStrip reads <strong>STOPPED</strong>. It illustrates the system notification, not confirmation that a session is still running. A notification alone does not prove that MIDI messages are being transmitted.</p>
+  <figure><img src="PatchGrid_User_Manual_images/appendix_a_02_system_notification.png" alt="Apple&#x27;s session notification. The PG InfoStrip reads STOPPED in this captured example."><figcaption>Apple&#x27;s session notification. The PG InfoStrip reads STOPPED in this captured example.</figcaption></figure>
+  </div>
+  <div class="manual-step">
+  <h3>A.3 Stop a background session</h3>
+  <p>While a session is active, tap the <strong>Background MIDI InfoStrip</strong> next to the <strong>MIDI InfoStrip</strong>. The dialog shows <strong>Background MIDI active</strong>. Tap <strong>Stop Session</strong> to end the background session, or <strong>Cancel</strong> to leave it running. Stopping the session does not disable normal foreground MIDI or close the configured MIDI ports. Keep PatchGrid in the foreground to continue using MIDI reliably.</p>
+  <figure><img src="PatchGrid_User_Manual_images/appendix_a_03_stop_session.png" alt="Tap the Background MIDI InfoStrip, then Stop Session. Cancel leaves the current session running."><figcaption>Tap the Background MIDI InfoStrip, then Stop Session. Cancel leaves the current session running.</figcaption></figure>
+  </div>
+  <div class="manual-step">
+  <h3>A.4 Start a session again</h3>
+  <p>After a session has stopped, tap the <strong>Background MIDI InfoStrip</strong> again. The dialog shows the stopped status and offers <strong>Start Session</strong>. Tap <strong>Start Session</strong> to request a new background session, or <strong>Cancel</strong> to leave it stopped. The elapsed-time display starts when iPadOS accepts and launches the session. If the request is refused, keep PatchGrid in the foreground.</p>
+<p>Sessions do not restart automatically after a user or system cancellation. Background MIDI is a per-launch choice; after closing and relaunching PatchGrid, enable it again if required. Session controls are also available from <strong>Settings &gt; Config &gt; General &gt; Background MIDI</strong>.</p>
+  <figure><img src="PatchGrid_User_Manual_images/appendix_a_04_start_session.png" alt="Tap Start Session to request background MIDI again. Cancel leaves the session stopped."><figcaption>Tap Start Session to request background MIDI again. Cancel leaves the session stopped.</figcaption></figure>
+  </div>
+  <div class="copyright">© 2026 Stringline Productions. All rights reserved.</div>
+</main>
+<div class="running-footer">© 2026 Stringline Productions. All rights reserved.</div>
+</body>
+</html>

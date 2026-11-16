@@ -1,0 +1,7 @@
+db/
+scripts/
+*.sql
+*.mjs
+*.heic
+.idea/
+.DS_Store

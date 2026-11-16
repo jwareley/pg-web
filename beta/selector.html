@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PG Beta | UI Selector unavailable</title>
+  <link rel="stylesheet" href="beta.css"><link rel="stylesheet" href="stage.css">
+</head>
+<body>
+  <main class="shell selector-shell">
+    <header class="topbar selector-topbar"><div><div class="eyebrow">VIRTUAL CONTROLLERS / BETA TOOL</div><h1>App Element Selector</h1></div><a class="ghost link-button" href="index.html">Back to testing ↗</a></header>
+    <section class="main-panel"><h2>Temporarily unavailable</h2><p class="muted">The App Element Selector is hidden during Stage 1 while it is being corrected. It may return in Stage 2.</p></section>
+    <div hidden><section class="selector-layout">
+      <aside class="selector-nav"><div class="eyebrow">SELECT A VIEW</div><div id="viewList" class="view-list"></div><div class="selector-help">Hover or tap a highlighted UI area. Select it to copy the standard location label into your beta report.</div></aside>
+      <section class="selector-main"><div class="selector-heading"><div><div class="eyebrow" id="viewCode">VIEW</div><h2 id="viewTitle">PatchGrid Boot</h2></div><span class="pill">NO SCREENSHOT REQUIRED</span></div><div class="image-stage" id="imageStage"><img id="selectorImage" alt="PatchGrid UI reference"><div id="hotspots"></div></div><div class="selection-card"><div class="eyebrow">SELECTED UI ELEMENT</div><div id="selectedLabel" class="selected-label">Choose an area on the reference image</div><button id="copyLabel" class="primary" type="button" disabled>Copy label</button><span id="copyState" class="copy-state" role="status"></span></div></section>
+    </section></div>
+  </main>
+  <script src="stage.js"></script><script src="selector.js"></script>
+</body>
+</html>

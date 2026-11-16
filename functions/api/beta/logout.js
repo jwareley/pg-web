@@ -1,0 +1,2 @@
+import {getSession,json,noStore,sessionHash} from "../../_lib/beta-auth.js";
+export async function onRequestPost({request,env}){const cookie=request.headers.get("Cookie")||"";const m=cookie.match(/(?:^|; )pg_beta_session=([^;]+)/);if(m)await env.DB.prepare("DELETE FROM beta_sessions WHERE token_hash=?").bind(await sessionHash(m[1])).run();return json({ok:true},200,{...noStore,"Set-Cookie":"pg_beta_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"})}

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PatchGrid - Korg M3 Virtual Controller</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ensuring strict pure black backgrounds and precise grey outlines */
+        .asset-box {
+            background-color: #000000;
+            border: 1px solid #4B5563; /* Tailwind gray-600 */
+        }
+
+        /* Boot-screen-inspired product lockup: technical, compact, and legible. */
+        .boot-mark {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 4.2rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .boot-version {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 2.4rem;
+            letter-spacing: 0.2em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .boot-typeface {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        }
+
+        /* Keep the primary site content broad on desktop while retaining
+           comfortable mobile gutters. */
+        .site-column {
+            width: 80%;
+            max-width: 1600px;
+        }
+
+        .hero-frame {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: min(68vh, 760px);
+            min-height: 18rem;
+            background: #000;
+        }
+
+        .hero-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        @media (min-width: 769px) {
+            .desktop-hero-carousel .hero-frame {
+                height: min(56vh, 30rem);
+                min-height: 18rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .site-column {
+                width: calc(100% - 2rem);
+            }
+
+            .hero-frame {
+                height: min(62vh, 34rem);
+                min-height: 16rem;
+            }
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .feature-layout {
+            display: grid;
+            grid-template-columns: 17rem minmax(0, 1fr);
+            gap: 1.25rem;
+            align-items: start;
+            margin-top: 1.25rem;
+        }
+
+        .feature-tabs {
+            display: grid;
+            gap: 0.35rem;
+            margin: 0;
+            padding: 0.65rem;
+            border-radius: 1rem;
+            background: #090b0c;
+        }
+
+        .feature-tab {
+            width: 100%;
+            border: 1px solid transparent;
+            border-radius: 0.5rem;
+            padding: 0.95rem 1rem;
+            background: transparent;
+            color: #d1d5db;
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.2;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+        }
+
+        .feature-tab:hover,
+        .feature-tab:focus-visible {
+            border-color: #facc15;
+            color: #ffffff;
+            outline: none;
+        }
+
+        .feature-tab[aria-selected="true"] {
+            border-color: #facc15;
+            background: #facc15;
+            color: #121212;
+        }
+
+        .feature-card {
+            display: grid;
+            grid-template-columns: 1fr;
+            border-radius: 1rem;
+            padding: 2rem 2.25rem;
+            background: linear-gradient(110deg, #121617, #070808);
+        }
+
+        .feature-card-title {
+            display: none;
+        }
+
+        .feature-card-title::before {
+            content: none;
+        }
+
+        .feature-card-list {
+            display: grid;
+            gap: 1rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .feature-card-list li {
+            display: grid;
+            grid-template-columns: 0.45rem minmax(0, 1fr);
+            gap: 0.75rem;
+            align-items: start;
+            color: #f3f4f6;
+            font-size: clamp(1.125rem, 1.35vw, 1.35rem);
+            line-height: 1.55;
+        }
+
+        .feature-card-list li::before {
+            content: "";
+            width: 0.45rem;
+            height: 0.45rem;
+            margin-top: 0.62em;
+            border-radius: 999px;
+            background: #facc15;
+        }
+
+        @media (max-width: 768px) {
+            .feature-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-card {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+            }
+
+            .feature-tabs {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-card-list li {
+                font-size: 1.125rem;
+            }
+        }
+        /* Only the active feature card is shown (the grid rule above would otherwise override [hidden]). */
+        .feature-card[hidden] {
+            display: none;
+        }
+
+        /* Phones: feature tabs become a swipeable strip above the active card. */
+        @media (max-width: 768px) {
+            .feature-tabs {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x proximity;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 0.5rem;
+            }
+
+            .feature-tab {
+                flex: 0 0 auto;
+                width: auto;
+                white-space: nowrap;
+                scroll-snap-align: start;
+            }
+        }
+
+        /* Tablets: the hero carousel gets its own full-width row, sized to leave room for the content. */
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .hero-frame {
+                height: min(56vh, 30rem);
+            }
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-100 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="site-column mx-auto px-0 py-6 flex flex-wrap justify-center md:justify-between items-center md:items-start gap-y-4 md:gap-8 lg:grid lg:grid-cols-[1fr_minmax(0,42rem)_1fr] lg:items-start">
+        <div class="order-2 flex items-center gap-3 lg:col-start-1 lg:justify-self-start">
+            <div class="w-28 h-28 md:w-40 md:h-40 lg:w-48 lg:h-48 flex items-center justify-center">
+                <img
+                    src="assets/patchgrid-logo.png"
+                    alt="PatchGrid logo"
+                    class="w-full h-full object-contain"
+                >
+            </div>
+        </div>
+        <div id="heroCarouselDesktop" class="order-3 desktop-hero-carousel hidden lg:block lg:col-start-2 min-w-0 w-full mx-auto">
+            <div class="hero-frame relative overflow-hidden rounded-xl">
+                <img
+                    src="assets/hero-play-grid.png"
+                    alt="PatchGrid Play view with a 4 by 4 sound grid"
+                    id="mainPreviewDesktop"
+                    class="block w-full h-full object-contain transition-opacity duration-300"
+                >
+            </div>
+            <div class="mt-4 flex items-center justify-center">
+                <div id="heroIndicatorsDesktop" class="flex flex-wrap justify-center gap-2" aria-label="PatchGrid screenshot slides"></div>
+            </div>
+        </div>
+        <div class="order-1 flex w-full lg:col-span-3 justify-center gap-6 md:gap-8 text-sm font-medium text-gray-300">
+            <a href="#summary" class="hover:text-white transition-colors">Features</a>
+            <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
+            <a href="#manual" data-support-link class="hover:text-white transition-colors">Support</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="site-column mx-auto py-16 md:pt-0 text-center flex flex-col">
+        <h2 class="order-1 text-gray-400 text-sm tracking-[0.2em] uppercase mb-4">Designed for Korg M3</h2>
+        <!-- Hero Image Carousel -->
+        <div id="heroCarousel" class="order-2 lg:hidden w-full mx-auto">
+            <div class="hero-frame relative overflow-hidden rounded-xl">
+            <img
+                src="assets/hero-play-grid.png"
+                alt="PatchGrid Play view with a 4 by 4 sound grid"
+                id="mainPreview"
+                class="block w-full h-full object-contain transition-opacity duration-300"
+            >
+            </div>
+            <div class="mt-4 flex items-center justify-center">
+                <div id="heroIndicators" class="flex flex-wrap justify-center gap-2" aria-label="PatchGrid screenshot slides"></div>
+            </div>
+        </div>
+        <p class="order-3 text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mt-8 mb-12">
+            Bring intuitive control and modern workflow to your legacy Korg M3 hardware. PatchGrid: The ultimate professional iPad virtual controller.
+        </p>
+    </header>
+
+    <!-- Summary Section -->
+    <section id="summary" class="site-column mx-auto py-8 scroll-mt-8">
+    <div class="px-6 py-10 md:px-12 md:py-12">
+            <div class="max-w-4xl mx-auto text-center mb-10">
+                <h2 class="text-xs md:text-sm uppercase tracking-[0.2em] text-gray-400 mb-4">Feature Summary</h2>
+                <p class="text-2xl md:text-3xl font-semibold text-white leading-tight">
+                    Build performance-ready sound grids in seconds
+                </p>
+            </div>
+    </div>
+            <div class="feature-layout">
+                <div id="featureTabs" class="feature-tabs" role="tablist" aria-label="PatchGrid feature categories" aria-orientation="vertical"></div>
+                <div class="feature-grid text-left">
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Launch and layout</h3>
+                    <ul class="feature-card-list">
+                        <li>Instant patch launch from a visual 4 x 4 slot grid</li>
+                        <li>Multi-page PatchGrids for larger sound sets</li>
+                        <li>One-touch selection sends the chosen patch directly to the M3</li>
+                        <li>Dedicated Play view for quick access during performance</li>
+                        <li>Dedicated Edit view for building and managing PatchGrids</li>
+                        <li>Lock or unlock slot-grid dragging in Play view</li>
+                        <li>Template PatchGrids can be filled from enabled INT and USR banks</li>
+                        <li>Settings includes MIDI routing, filtering, Bi-directional, Learn, Config, and Patch Library tools</li>
+                        <li>Expandable MIDI Activity strip shows Program Change, Bank Select, CC, SysEx, and note information</li>
+                        <li>KARMA information strip shows the current patch setting above the large PROG/COMBI name</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Sounds and storage</h3>
+                    <ul class="feature-card-list">
+                        <li>Stores both PROG and COMBI patches in the same PatchGrid workflow</li>
+                        <li>Up to 16 slots per page</li>
+                        <li>Up to 8 pages per PatchGrid</li>
+                        <li>Up to 128 saved PatchGrids</li>
+                        <li>Default PatchGrid auto-populates starter sounds from PROG and COMBI categories</li>
+                        <li>Default PatchGrid includes starter notes explaining its sample sounds</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Per-slot control</h3>
+                    <ul class="feature-card-list">
+                        <li>Per-page, per-patch performance-control overrides</li>
+                        <li>Saved controls include Tempo, Volume, EQ, Transpose, SW1, SW2, Drum Track, and KARMA</li>
+                        <li>Save recalls the selected patch's controls and highlights when an override is active</li>
+                        <li>16 slot colours with Auto Colour and quick two-tap colour selection</li>
+                        <li>In Play view, drag up or down for category-specific patch changes and left or right for bank-specific patch changes</li>
+                        <li>Search and assign patches by name or number from the Play view</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Patch search and assignment</h3>
+                    <ul class="feature-card-list">
+                        <li>Find patches instantly by name or number with intelligent word matching</li>
+                        <li>Filter by PROG, COMBI, bank, GM, category, and subcategory</li>
+                        <li>Preview patches and browse grouped results before assigning</li>
+                        <li>Assign multiple patches to selected pages and slots without closing Search</li>
+                        <li>Change slot colours directly from the mini grid</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Performance and navigation</h3>
+                    <ul class="feature-card-list">
+                        <li>Empty slots can also be populated by dragging through patches</li>
+                        <li>Independent reorder modes for PatchGrids and pages with saved ordering</li>
+                        <li>Play view uses a 2 x 2 PatchGrid selector with arrows inside its width</li>
+                        <li>Selected slots use a thicker outline for clear identification</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Editing and management</h3>
+                    <ul class="feature-card-list">
+                        <li>PatchGrid naming with duplicate-name protection and input validation</li>
+                        <li>Rename, duplicate, clear, and hide PatchGrids</li>
+                        <li>Combined reorder icon with yellow active state and visible drop position</li>
+                        <li>Duplicate and clear individual pages</li>
+                        <li>Copy and paste single slots between positions</li>
+                        <li>Remembers the last selected page and slot when reloaded</li>
+                        <li>Saves PatchGrid data, slot settings, colours, and notes to file</li>
+                        <li>Notes support up to 500 characters with a remaining-character counter and scrolling</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Bi-directional M3 control</h3>
+                    <ul class="feature-card-list">
+                        <li>Bi-directional settings control incoming Drum, KARMA, and Patch messages</li>
+                        <li>MIDI Learn assigns incoming messages to Volume, EQ, Switch, Transpose, Slot, KARMA, Module, Scene, PatchGrid, PatchList, and Mode</li>
+                        <li>Patch selections made on your M3 are recognized instantly by type and reflected in the selected PatchGrid slot</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Modal popups</h3>
+                    <ul class="feature-card-list">
+                        <li>Tempo popup provides keypad entry, a round encoder, fine tuning, and favourite tempo selection</li>
+                        <li>KARMA Controls popup provides KARMA Drum Link, Latch On/Off, Module, and Scene selection using direct buttons or previous/next sequential controls</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-card-title">Supported Hardware Configurations</h3>
+                    <ul class="feature-card-list">
+                        <li>Supports both Lightning and USB-C iPad connection types</li>
+                    </ul>
+                </div>
+                </div>
+            </div>
+    </section>
+
+    <!-- System requirements -->
+    <section id="requirements" class="site-column mx-auto py-8 scroll-mt-8">
+        <div class="p-8 md:p-10">
+            <div class="max-w-4xl mx-auto text-center mb-8">
+                <h2 class="text-xs md:text-sm uppercase tracking-[0.2em] text-gray-400 mb-4">System Requirements</h2>
+                <p class="text-2xl md:text-3xl font-semibold text-white leading-tight">Built for iPad. Best experienced on newer hardware.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                <div class="border border-gray-700 rounded-lg p-5">
+                    <p class="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Absolute minimum</p>
+                    <p class="text-lg font-semibold text-white">iPad 6th generation</p>
+                    <p class="text-sm text-gray-400 mt-1">A10 chip</p>
+                </div>
+                <div class="border border-yellow-400/60 rounded-lg p-5">
+                    <p class="text-xs uppercase tracking-[0.16em] text-yellow-300 mb-2">Minimum recommended</p>
+                    <p class="text-lg font-semibold text-white">iPad 8th generation</p>
+                    <p class="text-sm text-gray-400 mt-1">A12 chip</p>
+                </div>
+                <div class="border border-gray-700 rounded-lg p-5">
+                    <p class="text-xs uppercase tracking-[0.16em] text-gray-500 mb-2">Recommended</p>
+                    <p class="text-lg font-semibold text-white">iPad 9th generation or newer</p>
+                </div>
+            </div>
+            <div class="mt-8 pt-8">
+                <div class="max-w-4xl mx-auto text-center mb-6">
+                    <p class="text-xs uppercase tracking-[0.2em] text-gray-400 mb-3">Korg M3 Minimum Requirement</p>
+                </div>
+                <div class="max-w-3xl mx-auto border border-gray-700 rounded-lg p-5 text-left">
+                    <p class="text-xs uppercase tracking-[0.16em] text-yellow-300 mb-2">Minimum device version</p>
+                    <p class="text-lg font-semibold text-white">Korg M3 system software 2.0.x</p>
+                    <p class="text-sm text-gray-400 mt-1">Required for MIDI connection and patch transfer</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="max-w-3xl mx-auto w-full px-6 py-16 scroll-mt-8">
+        <div class="grid grid-cols-1 gap-6">
+            
+            <!-- Tier 1 -->
+            <div class="asset-box rounded-xl p-8 flex flex-col max-w-xl mx-auto w-full">
+                <div class="flex justify-between items-start mb-6 border-b border-gray-600 pb-4">
+                    <div>
+                        <div class="text-gray-400 text-xs font-bold mb-1">Virtual Controllers</div>
+                        <h3 class="text-xl font-bold text-white leading-tight uppercase">PatchGrid<br></h3>
+                    </div>
+                    <span class="text-2xl font-bold text-white">$29.99</span>
+                </div>
+                <ul class="text-sm text-gray-400 space-y-3 flex-grow">
+                    <li class="flex items-center"><span class="text-white mr-2">✓</span> PatchGrid Standalone</li>
+                    <li class="flex items-start"><span class="text-white mr-2">✓</span> Live-ready control—leave worn knobs, encoders, and touchscreens behind</li>
+                    <li class="flex items-start"><span class="text-white mr-2">✓</span> Modernise your M3 with a fast, intuitive workflow</li>
+                    <li class="flex items-start"><span class="text-white mr-2">✓</span> Edit and organise your M3 patches offline—anytime, anywhere</li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Help Manual: hidden until Support is selected -->
+    <section id="manual" hidden aria-hidden="true" class="site-column mx-auto py-8 scroll-mt-8">
+        <div class="asset-box rounded-xl p-4 md:p-6 text-left">
+            <div class="flex items-center justify-between gap-4 mb-4">
+                <h2 id="manualTitle" tabindex="-1" class="text-xl font-semibold text-white">PatchGrid - M3 User Manual</h2>
+                <button type="button" id="manualClose" class="shrink-0 border border-gray-600 rounded px-4 py-2 text-sm text-gray-300 hover:border-white hover:text-white">Close Manual</button>
+            </div>
+            <iframe
+                src="PatchGrid_User_Manual.html"
+                title="PatchGrid - M3 User Manual"
+                class="w-full min-h-[720px] h-[80vh] rounded-lg border border-gray-600 bg-white"
+            ></iframe>
+        </div>
+        <div hidden class="asset-box rounded-xl p-8 md:p-10 text-left">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.2em] text-gray-500 mb-3">PatchGrid Help Manual</p>
+                    <h2 id="manualSummaryTitle" tabindex="-1" class="text-3xl font-semibold text-white">Build and perform with PatchGrid</h2>
+                    <p class="text-gray-400 mt-3 max-w-2xl">Use PatchGrid to organise Korg M3 PROG and COMBI sounds into fast, visual performance layouts.</p>
+                </div>
+                <button type="button" id="manualSummaryClose" class="self-start border border-gray-600 rounded px-4 py-2 text-sm text-gray-300 hover:border-white hover:text-white">Close Manual</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-gray-200">
+                <div>
+                    <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 mb-3">Launch and layout</h3>
+                    <ul class="space-y-2">
+                        <li>Launch patches instantly from the visual 4 x 4 slot grid.</li>
+                        <li>Use multiple pages for larger sound sets.</li>
+                        <li>Select a slot once to send its patch directly to the M3.</li>
+                        <li>Use the Play symbol for performance and the Grid icon for building PatchGrids.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 mb-3">Sounds and storage</h3>
+                    <ul class="space-y-2">
+                        <li>Store PROG and COMBI patches in the same PatchGrid workflow.</li>
+                        <li>Each page supports up to 16 slots.</li>
+                        <li>Each PatchGrid supports up to 8 pages and 128 saved PatchGrids.</li>
+                        <li>Starter sounds can be loaded from PROG and COMBI categories.</li>
+                        <li>The Default PatchGrid includes starter notes.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 mb-3">Per-slot control</h3>
+                    <ul class="space-y-2">
+                        <li>Save Tempo, Volume, EQ, Transpose, SW1, SW2, Drum Track, and KARMA per slot.</li>
+                        <li>Colour slots for fast visual grouping.</li>
+                        <li>Search and assign patches from the Play view by name, number, type, or bank.</li>
+                        <li>Enable template PatchGrids from Settings &gt; Config &gt; Grid/Pages.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 mb-3">Editing and management</h3>
+                    <ul class="space-y-2">
+                        <li>Rename, duplicate, clear, hide, and re-order PatchGrids and pages.</li>
+                        <li>Copy and paste individual slots.</li>
+                        <li>Notes are limited to 500 characters and remain scrollable with a live counter.</li>
+                        <li>PatchGrid remembers the last selected page and slot after reload.</li>
+                        <li>Save PatchGrid data, slot settings, colours, and notes to file.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy, Terms, and Contact panels: hidden until selected -->
+    <section id="privacyPanel" hidden aria-hidden="true" class="site-column mx-auto py-8 scroll-mt-8">
+        <div class="asset-box rounded-xl p-4 md:p-6 text-left">
+            <div class="flex items-center justify-between gap-4 mb-4">
+                <h2 id="privacyTitle" tabindex="-1" class="text-xl font-semibold text-white">Privacy Policy</h2>
+                <button type="button" id="privacyClose" class="shrink-0 border border-gray-600 rounded px-4 py-2 text-sm text-gray-300 hover:border-white hover:text-white">Close Privacy Policy</button>
+            </div>
+            <iframe src="privacy-policy.html" title="PatchGrid Privacy Policy" class="w-full min-h-[720px] h-[80vh] rounded-lg border border-gray-600 bg-black"></iframe>
+        </div>
+    </section>
+
+    <section id="termsPanel" hidden aria-hidden="true" class="site-column mx-auto py-8 scroll-mt-8">
+        <div class="flex items-center justify-between gap-4 mb-4">
+            <h2 id="termsTitle" tabindex="-1" class="text-xl font-semibold text-white">Terms and Conditions</h2>
+            <button type="button" id="termsClose" class="shrink-0 border border-gray-600 rounded px-4 py-2 text-sm text-gray-300 hover:border-white hover:text-white">Close Terms</button>
+        </div>
+        <iframe src="terms-and-conditions.html" title="PatchGrid Terms and Conditions" class="w-full min-h-[720px] h-[80vh] rounded-lg border border-gray-600 bg-black"></iframe>
+    </section>
+
+    <section id="contactPanel" hidden aria-hidden="true" class="site-column mx-auto py-8 scroll-mt-8">
+        <div class="asset-box rounded-xl p-4 md:p-6 text-left">
+            <div class="flex items-center justify-between gap-4 mb-4">
+                <h2 id="contactTitle" tabindex="-1" class="text-xl font-semibold text-white">Contact Us</h2>
+                <button type="button" id="contactClose" class="shrink-0 border border-gray-600 rounded px-4 py-2 text-sm text-gray-300 hover:border-white hover:text-white">Close Contact</button>
+            </div>
+            <iframe src="contact.html" title="Contact PatchGrid support" class="w-full min-h-[720px] h-[80vh] rounded-lg border border-gray-600 bg-black"></iframe>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 mt-auto">
+        <div class="site-column mx-auto py-8 flex flex-col md:flex-row justify-center items-center">
+            <div class="text-gray-500 text-sm">
+                <a href="output/pdf/PatchGrid_User_Manual.pdf" download class="hover:text-white mr-4">Download User Manual (PDF)</a>
+                <a href="#manual" id="supportLink" data-support-link class="hover:text-white mr-4">Support</a>
+                <a href="#contactPanel" id="contactLink" class="hover:text-white mr-4">Contact Us</a>
+                <a href="#privacyPanel" id="privacyLink" class="hover:text-white mr-4">Privacy Policy</a>
+                <a href="#termsPanel" id="termsLink" class="hover:text-white">Terms and Conditions</a>
+                <a href="https://www.facebook.com/virtual.controllers/" target="_blank" rel="noopener noreferrer" aria-label="PatchGrid on Facebook" class="inline-flex align-middle items-center justify-center ml-4 text-white hover:text-yellow-300">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M13.5 21v-8h2.75l.4-3h-3.15V8.08c0-.87.24-1.46 1.5-1.46h1.78V3.94c-.31-.04-1.38-.14-2.63-.14-2.61 0-4.4 1.6-4.4 4.55V10H7v3h2.75v8h3.75Z"/></svg>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const heroPreviews = [
+            document.getElementById('mainPreview'),
+            document.getElementById('mainPreviewDesktop')
+        ].filter(Boolean);
+        const heroSlides = [
+            {
+                src: 'assets/hero-play-grid.png',
+                alt: 'PatchGrid Play view with a 4 by 4 sound grid'
+            },
+            {
+                src: 'assets/hero-play-search.png',
+                alt: 'PatchGrid Play view with patch search'
+            }
+        ];
+        const heroIndicatorGroups = [
+            document.getElementById('heroIndicators'),
+            document.getElementById('heroIndicatorsDesktop')
+        ].filter(Boolean);
+        let heroSlideIndex = 0;
+        let heroTimer;
+
+        function renderHeroSlide(index) {
+            heroSlideIndex = (index + heroSlides.length) % heroSlides.length;
+            const slide = heroSlides[heroSlideIndex];
+
+            heroPreviews.forEach((preview) => {
+                preview.src = slide.src;
+                preview.alt = slide.alt;
+            });
+
+            heroIndicatorGroups.forEach((indicatorGroup) => {
+                Array.from(indicatorGroup.children).forEach((indicator, indicatorIndex) => {
+                    indicator.classList.toggle('bg-white', indicatorIndex === heroSlideIndex);
+                    indicator.classList.toggle('bg-gray-600', indicatorIndex !== heroSlideIndex);
+                    indicator.setAttribute('aria-current', indicatorIndex === heroSlideIndex ? 'true' : 'false');
+                });
+            });
+        }
+
+        function restartHeroTimer() {
+            window.clearInterval(heroTimer);
+            heroTimer = window.setInterval(() => renderHeroSlide(heroSlideIndex + 1), 7000);
+        }
+
+        heroIndicatorGroups.forEach((indicatorGroup) => {
+            heroSlides.forEach((slide, index) => {
+                const indicator = document.createElement('button');
+                indicator.type = 'button';
+                indicator.className = 'h-4 w-4 rounded-full bg-gray-600 transition hover:bg-white';
+                indicator.setAttribute('aria-label', `Show screenshot ${index + 1}`);
+                indicator.addEventListener('click', () => {
+                    renderHeroSlide(index);
+                    restartHeroTimer();
+                });
+                indicatorGroup.appendChild(indicator);
+            });
+        });
+
+        const featureTabs = document.getElementById('featureTabs');
+        const featureCards = Array.from(document.querySelectorAll('#summary .feature-card'));
+
+        function selectFeatureCard(selectedIndex, focusTab = false) {
+            featureCards.forEach((card, index) => {
+                const selected = index === selectedIndex;
+                card.hidden = !selected;
+                const tab = document.getElementById(`feature-tab-${index}`);
+                tab?.setAttribute('aria-selected', String(selected));
+                tab?.setAttribute('tabindex', selected ? '0' : '-1');
+                if (selected && focusTab) tab?.focus();
+            });
+        }
+
+        if (featureTabs && featureCards.length) {
+            featureCards.forEach((card, index) => {
+                const title = card.querySelector('.feature-card-title')?.textContent?.trim() || `Feature ${index + 1}`;
+                const tab = document.createElement('button');
+                tab.type = 'button';
+                tab.id = `feature-tab-${index}`;
+                tab.className = 'feature-tab';
+                tab.setAttribute('role', 'tab');
+                tab.setAttribute('aria-controls', `feature-panel-${index}`);
+                tab.textContent = title;
+
+                card.id = `feature-panel-${index}`;
+                card.setAttribute('role', 'tabpanel');
+                card.setAttribute('aria-labelledby', tab.id);
+
+                tab.addEventListener('click', () => selectFeatureCard(index));
+                tab.addEventListener('keydown', (event) => {
+                    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+                    event.preventDefault();
+                    const direction = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+                    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? featureCards.length - 1 : (index + direction + featureCards.length) % featureCards.length;
+                    selectFeatureCard(nextIndex, true);
+                });
+
+                featureTabs.appendChild(tab);
+            });
+
+            selectFeatureCard(0);
+        }
+
+        const manual = document.getElementById('manual');
+        const manualTitle = document.getElementById('manualTitle');
+        const supportLinks = Array.from(document.querySelectorAll('[data-support-link]'));
+        const manualClose = document.getElementById('manualClose');
+        const privacyPanel = document.getElementById('privacyPanel');
+        const privacyTitle = document.getElementById('privacyTitle');
+        const privacyLink = document.getElementById('privacyLink');
+        const privacyClose = document.getElementById('privacyClose');
+        const contactPanel = document.getElementById('contactPanel');
+        const contactTitle = document.getElementById('contactTitle');
+        const contactLink = document.getElementById('contactLink');
+        const contactClose = document.getElementById('contactClose');
+        const termsPanel = document.getElementById('termsPanel');
+        const termsTitle = document.getElementById('termsTitle');
+        const termsLink = document.getElementById('termsLink');
+        const termsClose = document.getElementById('termsClose');
+
+        function hideInfoPanels() {
+            [manual, privacyPanel, contactPanel, termsPanel].forEach((panel) => {
+                if (!panel) return;
+                panel.hidden = true;
+                panel.setAttribute('aria-hidden', 'true');
+            });
+        }
+
+        function showInfoPanel(panel, title, smooth = true) {
+            if (!panel) return;
+            hideInfoPanels();
+            panel.hidden = false;
+            panel.setAttribute('aria-hidden', 'false');
+            panel.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+            title?.focus({ preventScroll: true });
+        }
+
+        supportLinks.forEach((supportLink) => supportLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            showInfoPanel(manual, manualTitle);
+        }));
+
+        privacyLink?.addEventListener('click', (event) => {
+            event.preventDefault();
+            showInfoPanel(privacyPanel, privacyTitle);
+        });
+
+        contactLink?.addEventListener('click', (event) => {
+            event.preventDefault();
+            showInfoPanel(contactPanel, contactTitle);
+        });
+
+        termsLink?.addEventListener('click', (event) => {
+            event.preventDefault();
+            showInfoPanel(termsPanel, termsTitle);
+        });
+
+        const openHashTarget = () => {
+            const hashTargets = {
+                '#manual': [manual, manualTitle],
+                '#privacyPanel': [privacyPanel, privacyTitle],
+                '#contactPanel': [contactPanel, contactTitle],
+                '#termsPanel': [termsPanel, termsTitle]
+            };
+            const target = hashTargets[window.location.hash];
+            if (target) showInfoPanel(target[0], target[1], false);
+        };
+
+        window.addEventListener('hashchange', openHashTarget);
+        openHashTarget();
+
+        manualClose?.addEventListener('click', () => {
+            hideInfoPanels();
+            supportLinks[0]?.focus();
+        });
+
+        privacyClose?.addEventListener('click', () => {
+            hideInfoPanels();
+            privacyLink?.focus();
+        });
+
+        contactClose?.addEventListener('click', () => {
+            hideInfoPanels();
+            contactLink?.focus();
+        });
+
+        termsClose?.addEventListener('click', () => {
+            hideInfoPanels();
+            termsLink?.focus();
+        });
+
+        renderHeroSlide(0);
+        restartHeroTimer();
+    </script>
+
+</body>
+</html>
